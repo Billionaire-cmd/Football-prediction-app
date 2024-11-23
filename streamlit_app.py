@@ -50,18 +50,17 @@ def calculate_score_probabilities(home_goals, away_goals):
     return home_probs * away_probs
 
 # Predict Probabilities for Scorelines
-scoreline_probabilities = {}
-for home_goals in range(0, 6):  # Home goals 0 to 5
-    for away_goals in range(0, 6):  # Away goals 0 to 5
-        scoreline = f"{home_goals}-{away_goals}"
-        scoreline_probabilities[scoreline] = calculate_score_probabilities(home_goals, away_goals)
+st.subheader("Predicted Probabilities for Scorelines")
+score_probabilities = {}
+for home_goals in range(6):
+    for away_goals in range(6):
+        score_probabilities[f"{home_goals}-{away_goals}"] = calculate_score_probabilities(home_goals, away_goals)
 
-# Display Predicted Probabilities for Scorelines
-st.subheader("Scoreline Probabilities")
-for scoreline, prob in scoreline_probabilities.items():
-    st.write(f"{scoreline}: {prob*100:.2f}%")
+# Display Predicted Probabilities
+for scoreline, prob in score_probabilities.items():
+    st.write(f"**{scoreline}**: {prob * 100:.2f}%")
 
-# Function to Calculate HT/FT Probabilities
+# Function to Calculate Halftime/Fulltime Probabilities
 def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
     # Halftime Poisson probabilities (0-2 goals assumed)
     ht_probs = np.outer(
@@ -87,7 +86,28 @@ def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
 
     return ht_probs, ft_probs, ht_ft_probs
 
-# Example bookmaker odds
+# Calculate halftime and fulltime goals
+home_ht_goals = home_attack_strength * away_defense_strength * 0.5  # Adjusted halftime goals
+away_ht_goals = away_attack_strength * home_defense_strength * 0.5
+home_ft_goals = home_attack_strength * away_defense_strength
+away_ft_goals = away_attack_strength * home_defense_strength
+
+# Generate probabilities for HT/FT
+ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
+
+# Display HT/FT Probabilities
+st.subheader("HT/FT Probabilities")
+for outcome, prob in ht_ft_probs.items():
+    st.write(f"**{outcome}:** {prob * 100:.2f}%")
+
+# Function to identify value bets based on odds and predicted probabilities
+def identify_value_bets(predicted_prob, bookmaker_odds, risk_factor=0.05):
+    implied_prob = 1 / bookmaker_odds * 100  # Calculate implied probability
+    margin = predicted_prob - implied_prob
+    value_bet = margin > risk_factor * implied_prob  # Only bet if margin exceeds threshold
+    return value_bet, margin
+
+# Example bookmaker odds for HT/FT outcomes
 bookmaker_odds = {
     "1/1": 4.50,  # Odds for HT Home / FT Home
     "1/X": 5.00,  # Odds for HT Home / FT Draw
@@ -97,18 +117,11 @@ bookmaker_odds = {
     "X/2": 7.00,  # Odds for HT Draw / FT Away
 }
 
-# Display probabilities and identify value bets
-st.subheader("HT/FT Probabilities and Value Bets")
+# Display value bets
+st.subheader("Value Bets")
 for outcome, odds in bookmaker_odds.items():
     predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
+    is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
     st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
-
-    # Calculate implied probability
-    implied_prob = 1 / odds * 100
-    margin = predicted_prob - implied_prob
-    if margin > 5:  # Value bet threshold
-        st.write(f"  🔥 **Value Bet!** Margin: {margin:.2f}%")
-
-# Custom recommendation based on highest value margin
-best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
-st.write(f"💡 **Recommended Bet:** {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
+    if is_value_bet:
+        st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
