@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 
 # App Title
-st.title("🤖 Rabiotic Strategic HT/FT Prediction with 1-1 Focus")
+st.title("🤖 Rabiotic Strategic HT/FT Prediction Focus")
 
 # Sidebar Inputs
 st.sidebar.header("Input Probabilities")
@@ -10,12 +10,6 @@ st.sidebar.subheader("Match Outcome Probabilities")
 home_prob = st.sidebar.number_input("Home Win Probability (%)", value=50.00, min_value=0.0, max_value=100.0)
 draw_prob = st.sidebar.number_input("Draw Probability (%)", value=30.00, min_value=0.0, max_value=100.0)
 away_prob = st.sidebar.number_input("Away Win Probability (%)", value=20.00, min_value=0.0, max_value=100.0)
-
-st.sidebar.subheader("Over/Under and BTTS Probabilities")
-over_2_5_prob = st.sidebar.number_input("Over 2.5 Probability (%)", value=15.26)
-under_2_5_prob = st.sidebar.number_input("Under 2.5 Probability (%)", value=84.74)
-btts_yes_prob = st.sidebar.number_input("BTTS (Yes) Probability (%)", value=90.65)
-btts_no_prob = st.sidebar.number_input("BTTS (No) Probability (%)", value=9.35)
 
 st.sidebar.subheader("HT/FT Probabilities")
 ht_ft_probs = {
@@ -39,6 +33,12 @@ exact_goals_probs = {
     5: st.sidebar.number_input("Exact 5 Goals Probability (%)", value=0.33),
 }
 
+st.sidebar.subheader("Over/Under and BTTS Probabilities")
+over_2_5_prob = st.sidebar.number_input("Over 2.5 Probability (%)", value=15.26)
+under_2_5_prob = st.sidebar.number_input("Under 2.5 Probability (%)", value=84.74)
+btts_yes_prob = st.sidebar.number_input("BTTS (Yes) Probability (%)", value=90.65)
+btts_no_prob = st.sidebar.number_input("BTTS (No) Probability (%)", value=9.35)
+
 if st.sidebar.button("Submit Prediction"):
     st.header("Predicted Outcomes and Recommendations")
 
@@ -52,17 +52,19 @@ if st.sidebar.button("Submit Prediction"):
 
     # Define a scoring function for a 1-1 result
     def calculate_1_1_score(normalized_ht_ft, normalized_exact_goals):
+        # Prioritize X/X HT/FT and exact goals for 1-1
         ht_ft_score = normalized_ht_ft.get("X/X", 0) + 0.5 * (
             normalized_ht_ft.get("1/X", 0) + normalized_ht_ft.get("X/1", 0)
         )
-        exact_goal_score = normalized_exact_goals.get(1, 0) ** 2  # Probability of both teams scoring 1 goal
+        exact_goal_score = normalized_exact_goals.get(1, 0) ** 2  # Both teams scoring 1 goal
+        # Combine scores strategically
         combined_score = ht_ft_score * exact_goal_score
         return combined_score
 
     # Calculate likelihood of a 1-1 score
     score_1_1 = calculate_1_1_score(normalized_ht_ft, normalized_exact_goals)
 
-    # Recommend HT/FT and exact goals
+    # Get the most likely HT/FT result and exact goals as a backup
     def recommend_ht_ft(normalized_ht_ft):
         return max(normalized_ht_ft, key=normalized_ht_ft.get)
 
@@ -96,6 +98,8 @@ if st.sidebar.button("Submit Prediction"):
     st.write(f"**Most Likely Exact Goals:** {recommended_exact_goals}")
 
     st.write("### Prediction Summary")
-    st.write(f"Based on the inputs, the strategic calculation highlights a **1-1 draw** "
-             f"as a realistic outcome, with a backup HT/FT result of **{recommended_ht_ft}** "
-             f"and an exact goal count of **{recommended_exact_goals} goals**.")
+    st.write(
+        f"Based on the inputs, the strategic calculation highlights a **1-1 draw (HT: 1-1, FT: 1-1)** "
+        f"with the HT/FT recommendation of **X/X**, "
+        f"indicating both teams scoring and staying equal throughout the match."
+    )
