@@ -1,15 +1,75 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import poisson
-import streamlit as st
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import streamlit as st
+import matplotlib.pyplot as plt
+from math import factorial
 
 # Set up the Streamlit page configuration
 st.set_page_config(page_title="🤖 Rabiotic Advanced Prediction", layout="wide")
 
-# Function to calculate halftime and full-time probabilities
+# Streamlit Application Title
+st.title("🤖 Advanced Rabiotic Football Outcome Predictor")
+st.markdown("""
+Predict football match outcomes using advanced metrics like:
+- **Poisson Distribution**
+- **Machine Learning**
+- **Odds Analysis**
+- **Margin Calculations**
+""")
+
+# Sidebar for Input Parameters
+st.sidebar.header("Input Parameters")
+
+# Match and Odds Input
+home_team = st.sidebar.text_input("Home Team", "Team A")
+away_team = st.sidebar.text_input("Away Team", "Team B")
+goals_home_mean = st.sidebar.number_input("Expected Goals (Home)", min_value=0.1, value=1.2, step=0.1)
+goals_away_mean = st.sidebar.number_input("Expected Goals (Away)", min_value=0.1, value=1.1, step=0.1)
+
+# Odds Input
+home_win_odds = st.sidebar.number_input("Odds: Home Win", value=2.50, step=0.01)
+draw_odds = st.sidebar.number_input("Odds: Draw", value=3.20, step=0.01)
+away_win_odds = st.sidebar.number_input("Odds: Away Win", value=3.10, step=0.01)
+over_odds = st.sidebar.number_input("Over 2.5 Odds", value=2.40, step=0.01)
+under_odds = st.sidebar.number_input("Under 2.5 Odds", value=1.55, step=0.01)
+
+# Margin Targets
+st.sidebar.subheader("Margin Targets")
+margin_targets = {
+    "Match Results": st.sidebar.number_input("Match Results Margin", value=4.95, step=0.01),
+    "Asian Handicap": st.sidebar.number_input("Asian Handicap Margin", value=5.90, step=0.01),
+    "Over/Under": st.sidebar.number_input("Over/Under Margin", value=6.18, step=0.01),
+    "Exact Goals": st.sidebar.number_input("Exact Goals Margin", value=20.0, step=0.01),
+    "Correct Score": st.sidebar.number_input("Correct Score Margin", value=57.97, step=0.01),
+    "HT/FT": st.sidebar.number_input("HT/FT Margin", value=20.0, step=0.01),
+}
+
+# Select Points for Probabilities and Odds
+selected_points = st.sidebar.multiselect(
+    "Select Points for Probabilities and Odds",
+    options=["Home Win", "Draw", "Away Win", "Over 2.5", "Under 2.5", "Correct Score", "HT/FT", "BTTS", "Exact Goals"]
+)
+
+# Submit Button
+submit_button = st.sidebar.button("Submit Prediction")
+
+# Functions
+
+def calculate_margin_difference(odds, margin_target):
+    return round(margin_target - odds, 2)
+
+def poisson_prob(mean, goal):
+    return (np.exp(-mean) * mean**goal) / factorial(goal)  # Using `factorial` from `math`
+
+def calculate_probabilities(home_mean, away_mean, max_goals=5):
+    home_probs = [poisson_prob(home_mean, g) for g in range(max_goals + 1)]
+    away_probs = [poisson_prob(away_mean, g) for g in range(max_goals + 1)]
+    return home_probs, away_probs
+
 def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
     # Halftime Poisson probabilities (0-2 goals assumed)
     ht_probs = np.outer(
@@ -35,7 +95,6 @@ def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
 
     return ht_probs, ft_probs, ht_ft_probs
 
-# Function to calculate value bets
 def identify_value_bets(predicted_prob, bookmaker_odds, risk_factor=0.05):
     implied_prob = 1 / bookmaker_odds * 100  # Calculate implied probability
     margin = predicted_prob - implied_prob
@@ -60,54 +119,7 @@ def train_ml_model(historical_data):
     accuracy = accuracy_score(y_test, y_pred)
     return model, accuracy
 
-# Set up Streamlit interface
-st.title("🤖 Rabiotic Advanced Prediction")
-
-st.markdown("""
-    Welcome to **Rabiotic Advanced Prediction**, the ultimate football match prediction tool.
-    Here, you'll find Poisson-based predictions, value bet identification, and more.
-    Adjust inputs to see real-time predictions and recommendations for your next bet.
-""")
-
-# Input parameters (can be replaced with user inputs in the Streamlit app)
-home_attack = st.slider('Home Attack Strength', 0.5, 3.0, 1.8)  # Home team attack strength
-away_defense = st.slider('Away Defense Strength', 0.5, 3.0, 1.3)  # Away team defensive strength
-away_attack = st.slider('Away Attack Strength', 0.5, 3.0, 1.5)  # Away team attack strength
-home_defense = st.slider('Home Defense Strength', 0.5, 3.0, 1.4)  # Home team defensive strength
-
-# Calculate halftime and fulltime goals
-home_ht_goals = home_attack * away_defense * 0.5  # Adjusted halftime goals
-away_ht_goals = away_attack * home_defense * 0.5
-home_ft_goals = home_attack * away_defense
-away_ft_goals = away_attack * home_defense
-
-# Generate probabilities
-ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
-
-# Example bookmaker odds
-bookmaker_odds = {
-    "1/1": 4.50,  # Odds for HT Home / FT Home
-    "1/X": 5.00,  # Odds for HT Home / FT Draw
-    "1/2": 15.00, # Odds for HT Home / FT Away
-    "X/1": 6.00,  # Odds for HT Draw / FT Home
-    "X/X": 3.50,  # Odds for HT Draw / FT Draw
-    "X/2": 7.00,  # Odds for HT Draw / FT Away
-}
-
-# Display probabilities and identify value bets
-st.markdown("### HT/FT Probabilities and Value Bets")
-for outcome, odds in bookmaker_odds.items():
-    predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
-    is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
-    st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
-    if is_value_bet:
-        st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
-
-# Custom recommendation based on highest value margin
-best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
-st.write(f"💡 **Recommended Bet:** {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
-
-# Example historical data for training the model
+# Historical Data for Training
 historical_data = {
     'home_attack': [1.8, 2.0, 1.6],
     'away_defense': [1.3, 1.4, 1.2],
@@ -121,9 +133,39 @@ historical_data = pd.DataFrame(historical_data)
 # Train the machine learning model
 model, accuracy = train_ml_model(historical_data)
 
+# Display Model Accuracy
 st.write(f"Model Accuracy: {accuracy * 100:.2f}%")
 
-# Use the trained model to refine the predictions for the next match
-match_features = np.array([home_attack, away_defense, home_defense, away_attack]).reshape(1, -1)
-predicted_outcome = model.predict(match_features)
-st.write(f"Predicted Match Outcome: {'Home Win' if predicted_outcome == 1 else 'Draw' if predicted_outcome == 0 else 'Away Win'}")
+# Calculate Home and Away Probabilities
+home_probs, away_probs = calculate_probabilities(goals_home_mean, goals_away_mean)
+
+# Generate HT/FT Probabilities
+home_ht_goals = goals_home_mean * 0.5  # Adjusted halftime goals
+away_ht_goals = goals_away_mean * 0.5
+home_ft_goals = goals_home_mean
+away_ft_goals = goals_away_mean
+
+ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
+
+# Example bookmaker odds
+bookmaker_odds = {
+    "1/1": home_win_odds,  # Odds for HT Home / FT Home
+    "1/X": draw_odds,      # Odds for HT Home / FT Draw
+    "1/2": away_win_odds,  # Odds for HT Home / FT Away
+    "X/1": home_win_odds,  # Odds for HT Draw / FT Home
+    "X/X": draw_odds,      # Odds for HT Draw / FT Draw
+    "X/2": away_win_odds,  # Odds for HT Draw / FT Away
+}
+
+# Display probabilities and identify value bets
+st.markdown("### HT/FT Probabilities and Value Bets")
+for outcome, odds in bookmaker_odds.items():
+    predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
+    is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
+    st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
+    if is_value_bet:
+        st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
+
+# Custom recommendation based on highest value margin
+best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
+st.write(f"\n### Best Recommended Bet: {best_bet}")
