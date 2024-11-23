@@ -11,6 +11,12 @@ home_prob = st.sidebar.number_input("Home Win Probability (%)", value=50.00, min
 draw_prob = st.sidebar.number_input("Draw Probability (%)", value=30.00, min_value=0.0, max_value=100.0)
 away_prob = st.sidebar.number_input("Away Win Probability (%)", value=20.00, min_value=0.0, max_value=100.0)
 
+st.sidebar.subheader("Over/Under and BTTS Probabilities")
+over_2_5_prob = st.sidebar.number_input("Over 2.5 Probability (%)", value=15.26)
+under_2_5_prob = st.sidebar.number_input("Under 2.5 Probability (%)", value=84.74)
+btts_yes_prob = st.sidebar.number_input("BTTS (Yes) Probability (%)", value=90.65)
+btts_no_prob = st.sidebar.number_input("BTTS (No) Probability (%)", value=9.35)
+
 st.sidebar.subheader("HT/FT Probabilities")
 ht_ft_probs = {
     "1/1": st.sidebar.number_input("1/1 (%)", value=40.00),
@@ -46,19 +52,17 @@ if st.sidebar.button("Submit Prediction"):
 
     # Define a scoring function for a 1-1 result
     def calculate_1_1_score(normalized_ht_ft, normalized_exact_goals):
-        # Prioritize X/X HT/FT and exact goals for 1-1
         ht_ft_score = normalized_ht_ft.get("X/X", 0) + 0.5 * (
             normalized_ht_ft.get("1/X", 0) + normalized_ht_ft.get("X/1", 0)
         )
-        exact_goal_score = normalized_exact_goals.get(1, 0) ** 2  # Both teams scoring 1 goal
-        # Combine scores strategically
+        exact_goal_score = normalized_exact_goals.get(1, 0) ** 2  # Probability of both teams scoring 1 goal
         combined_score = ht_ft_score * exact_goal_score
         return combined_score
 
     # Calculate likelihood of a 1-1 score
     score_1_1 = calculate_1_1_score(normalized_ht_ft, normalized_exact_goals)
 
-    # Get the most likely HT/FT result and exact goals as a backup
+    # Recommend HT/FT and exact goals
     def recommend_ht_ft(normalized_ht_ft):
         return max(normalized_ht_ft, key=normalized_ht_ft.get)
 
@@ -73,6 +77,10 @@ if st.sidebar.button("Submit Prediction"):
     st.write(f"Home Win Probability: {home_prob:.2f}%")
     st.write(f"Draw Probability: {draw_prob:.2f}%")
     st.write(f"Away Win Probability: {away_prob:.2f}%")
+    st.write(f"Over 2.5 Probability: {over_2_5_prob:.2f}%")
+    st.write(f"Under 2.5 Probability: {under_2_5_prob:.2f}%")
+    st.write(f"BTTS (Yes) Probability: {btts_yes_prob:.2f}%")
+    st.write(f"BTTS (No) Probability: {btts_no_prob:.2f}%")
 
     st.write("### HT/FT Probabilities")
     for key, value in ht_ft_probs.items():
