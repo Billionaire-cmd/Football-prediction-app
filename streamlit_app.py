@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from math import factorial
 
 # Set up the Streamlit page configuration
-st.set_page_config(page_title="🤖 Advanced Rabiotic Prediction", layout="wide")
+st.set_page_config(page_title="🤖 Advanced Rabiotic Prediction App", layout="wide")
 
 # Streamlit Application Title
 st.title("🤖 Advanced Rabiotic Football Outcome Predictor")
