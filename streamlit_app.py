@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # App Title
-st.title("⚽ HT/FT Prediction with Advanced Probabilities")
+st.title("🤖Rabiotic HT/FT Prediction with Advanced Probabilities")
 
 # Sidebar Inputs
 st.sidebar.header("Input Parameters")
