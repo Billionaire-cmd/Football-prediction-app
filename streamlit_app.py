@@ -1,83 +1,116 @@
 import numpy as np
-import pandas as pd
 from scipy.stats import poisson
-from sklearn.ensemble import RandomForestClassifier
-
-# Function to calculate weighted Poisson means
-def calculate_weighted_means(team_stats, weights):
-    weighted_avg = np.average(team_stats, weights=weights)
-    return weighted_avg
+import streamlit as st
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 # Function to calculate halftime and full-time probabilities
-def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft, historical_transitions):
+def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
+    # Halftime Poisson probabilities (0-2 goals assumed)
     ht_probs = np.outer(
-        [poisson.pmf(i, home_ht) for i in range(3)],
+        [poisson.pmf(i, home_ht) for i in range(3)], 
         [poisson.pmf(i, away_ht) for i in range(3)]
     )
+
+    # Fulltime Poisson probabilities (0-5 goals assumed)
     ft_probs = np.outer(
-        [poisson.pmf(i, home_ft) for i in range(6)],
+        [poisson.pmf(i, home_ft) for i in range(6)], 
         [poisson.pmf(i, away_ft) for i in range(6)]
     )
 
-    # Historical transitions override static probabilities
+    # HT -> FT transition probabilities
     ht_ft_probs = {
-        "1/1": np.sum(np.tril(ft_probs, -1)) * historical_transitions.get("1/1", 0.6),
-        "1/X": np.sum(np.diag(ft_probs)) * historical_transitions.get("1/X", 0.4),
-        "1/2": np.sum(np.triu(ft_probs, 1)) * historical_transitions.get("1/2", 0.2),
-        "X/1": np.sum(np.tril(ft_probs, -1)) * historical_transitions.get("X/1", 0.4),
-        "X/X": np.sum(np.diag(ft_probs)) * historical_transitions.get("X/X", 0.6),
-        "X/2": np.sum(np.triu(ft_probs, 1)) * historical_transitions.get("X/2", 0.4),
+        "1/1": np.sum(np.tril(ft_probs, -1)) * 0.6,  # Halftime Home, Fulltime Home
+        "1/X": np.sum(np.diag(ft_probs)) * 0.4,      # Halftime Home, Fulltime Draw
+        "1/2": np.sum(np.triu(ft_probs, 1)) * 0.2,   # Halftime Home, Fulltime Away
+        "X/1": np.sum(np.tril(ft_probs, -1)) * 0.4,  # Halftime Draw, Fulltime Home
+        "X/X": np.sum(np.diag(ft_probs)) * 0.6,      # Halftime Draw, Fulltime Draw
+        "X/2": np.sum(np.triu(ft_probs, 1)) * 0.4,   # Halftime Draw, Fulltime Away
     }
 
     return ht_probs, ft_probs, ht_ft_probs
 
-# Value bet identification
-def identify_value_bets(predicted_prob, bookmaker_odds):
-    implied_prob = 1 / bookmaker_odds * 100
-    return predicted_prob > implied_prob, predicted_prob - implied_prob
+# Function to calculate value bets
+def identify_value_bets(predicted_prob, bookmaker_odds, risk_factor=0.05):
+    implied_prob = 1 / bookmaker_odds * 100  # Calculate implied probability
+    margin = predicted_prob - implied_prob
+    value_bet = margin > risk_factor * implied_prob  # Only bet if margin exceeds threshold
+    return value_bet, margin
 
-# Example data inputs
-home_attack = 1.8
-away_defense = 1.3
-away_attack = 1.5
-home_defense = 1.4
+# Machine Learning Model for Additional Refinement
+def train_ml_model(historical_data):
+    # Features: [home_attack, away_defense, home_defense, away_attack, etc.]
+    X = historical_data[['home_attack', 'away_defense', 'home_defense', 'away_attack']]
+    y = historical_data['outcome']  # Target: [1 for Home Win, 0 for Draw, -1 for Away Win]
 
-# Adjusted weights for recent form
-recent_form = [2, 1.5, 1.0]  # Example recent form goals
-weights = [0.5, 0.3, 0.2]
-home_weighted_goals = calculate_weighted_means(recent_form, weights)
-away_weighted_goals = calculate_weighted_means(recent_form[::-1], weights)
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Calculate goals
-home_ht_goals = home_weighted_goals * away_defense * 0.5
-away_ht_goals = away_weighted_goals * home_defense * 0.5
-home_ft_goals = home_weighted_goals * away_defense
-away_ft_goals = away_weighted_goals * home_defense
+    # Train logistic regression model
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
 
-# Historical HT/FT transition data
-historical_transitions = {
-    "1/1": 0.5, "1/X": 0.3, "1/2": 0.2,
-    "X/1": 0.4, "X/X": 0.6, "X/2": 0.3,
+    # Evaluate the model
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    return model, accuracy
+
+# Input parameters (can be replaced with user inputs)
+home_attack = 1.8  # Home team attack strength
+away_defense = 1.3  # Away team defensive strength
+away_attack = 1.5  # Away team attack strength
+home_defense = 1.4  # Home team defensive strength
+
+# Calculate halftime and fulltime goals
+home_ht_goals = home_attack * away_defense * 0.5  # Adjusted halftime goals
+away_ht_goals = away_attack * home_defense * 0.5
+home_ft_goals = home_attack * away_defense
+away_ft_goals = away_attack * home_defense
+
+# Generate probabilities
+ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
+
+# Example bookmaker odds
+bookmaker_odds = {
+    "1/1": 4.50,  # Odds for HT Home / FT Home
+    "1/X": 5.00,  # Odds for HT Home / FT Draw
+    "1/2": 15.00, # Odds for HT Home / FT Away
+    "X/1": 6.00,  # Odds for HT Draw / FT Home
+    "X/X": 3.50,  # Odds for HT Draw / FT Draw
+    "X/2": 7.00,  # Odds for HT Draw / FT Away
 }
 
-# Calculate probabilities
-ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals, historical_transitions)
-
-# Bookmaker odds example
-bookmaker_odds = {"1/1": 4.50, "1/X": 5.00, "1/2": 15.00, "X/1": 6.00, "X/X": 3.50, "X/2": 7.00}
-
-# Value bet detection
-value_bets = {}
+# Display probabilities and identify value bets
+st.markdown("### HT/FT Probabilities and Value Bets")
 for outcome, odds in bookmaker_odds.items():
-    predicted_prob = ht_ft_probs[outcome] * 100
-    is_value, margin = identify_value_bets(predicted_prob, odds)
-    value_bets[outcome] = {"Probability": predicted_prob, "Value Bet": is_value, "Margin": margin}
+    predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
+    is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
+    st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
+    if is_value_bet:
+        st.write(f"  🔥 Value Bet! Margin: {value_margin:.2f}%")
 
-# Display recommendations
-print("### HT/FT Probabilities and Value Bets")
-for outcome, data in value_bets.items():
-    print(f"{outcome}: {data['Probability']:.2f}% (Value Bet: {data['Value Bet']}, Margin: {data['Margin']:.2f}%)")
+# Custom recommendation based on highest value margin
+best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
+st.write(f"💡 Recommended Bet: {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
 
-# Recommend best bet
-best_bet = max(value_bets, key=lambda x: value_bets[x]["Margin"] if value_bets[x]["Value Bet"] else -1)
-print(f"💡 Recommended Bet: {best_bet} (Probability: {value_bets[best_bet]['Probability']:.2f}%, Odds: {bookmaker_odds[best_bet]})")
+# Example historical data for training the model
+historical_data = {
+    'home_attack': [1.8, 2.0, 1.6],
+    'away_defense': [1.3, 1.4, 1.2],
+    'home_defense': [1.4, 1.3, 1.6],
+    'away_attack': [1.5, 1.7, 1.4],
+    'outcome': [1, 0, -1]  # 1 = Home Win, 0 = Draw, -1 = Away Win
+}
+
+historical_data = pd.DataFrame(historical_data)
+
+# Train the machine learning model
+model, accuracy = train_ml_model(historical_data)
+
+st.write(f"Model Accuracy: {accuracy * 100:.2f}%")
+
+# Use the trained model to refine the predictions for the next match
+match_features = np.array([home_attack, away_defense, home_defense, away_attack]).reshape(1, -1)
+predicted_outcome = model.predict(match_features)
+st.write(f"Predicted Match Outcome: {'Home Win' if predicted_outcome == 1 else 'Draw' if predicted_outcome == 0 else 'Away Win'}")
