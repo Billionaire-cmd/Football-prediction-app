@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import poisson
 
 # Streamlit App
-st.title("🤖 Advanced Rabiotic Correct Score Prediction Pro")
+st.title("🤖 Advanced Rabiotic Correct Score Prediction Pro 1")
 st.sidebar.header("Input Parameters")
 
 # Sidebar Inputs
