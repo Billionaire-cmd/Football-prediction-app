@@ -1,9 +1,13 @@
 import numpy as np
+import pandas as pd
 from scipy.stats import poisson
 import streamlit as st
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+
+# Set up the Streamlit page configuration
+st.set_page_config(page_title="🤖 Rabiotic Advanced Prediction", layout="wide")
 
 # Function to calculate halftime and full-time probabilities
 def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
@@ -56,11 +60,20 @@ def train_ml_model(historical_data):
     accuracy = accuracy_score(y_test, y_pred)
     return model, accuracy
 
-# Input parameters (can be replaced with user inputs)
-home_attack = 1.8  # Home team attack strength
-away_defense = 1.3  # Away team defensive strength
-away_attack = 1.5  # Away team attack strength
-home_defense = 1.4  # Home team defensive strength
+# Set up Streamlit interface
+st.title("🤖 Rabiotic Advanced Prediction")
+
+st.markdown("""
+    Welcome to **Rabiotic Advanced Prediction**, the ultimate football match prediction tool.
+    Here, you'll find Poisson-based predictions, value bet identification, and more.
+    Adjust inputs to see real-time predictions and recommendations for your next bet.
+""")
+
+# Input parameters (can be replaced with user inputs in the Streamlit app)
+home_attack = st.slider('Home Attack Strength', 0.5, 3.0, 1.8)  # Home team attack strength
+away_defense = st.slider('Away Defense Strength', 0.5, 3.0, 1.3)  # Away team defensive strength
+away_attack = st.slider('Away Attack Strength', 0.5, 3.0, 1.5)  # Away team attack strength
+home_defense = st.slider('Home Defense Strength', 0.5, 3.0, 1.4)  # Home team defensive strength
 
 # Calculate halftime and fulltime goals
 home_ht_goals = home_attack * away_defense * 0.5  # Adjusted halftime goals
@@ -88,11 +101,11 @@ for outcome, odds in bookmaker_odds.items():
     is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
     st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
     if is_value_bet:
-        st.write(f"  🔥 Value Bet! Margin: {value_margin:.2f}%")
+        st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
 
 # Custom recommendation based on highest value margin
 best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
-st.write(f"💡 Recommended Bet: {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
+st.write(f"💡 **Recommended Bet:** {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
 
 # Example historical data for training the model
 historical_data = {
