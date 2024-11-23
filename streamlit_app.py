@@ -1,5 +1,6 @@
 import streamlit as st
 from scipy.stats import poisson
+import numpy as np
 
 # Title of the App
 st.title("🤖 Rabiotic Football Match Outcome Predictor")
@@ -43,78 +44,63 @@ st.subheader("Expected Goals")
 st.write(f"**Home Team Expected Goals:** {home_expected_goals:.2f}")
 st.write(f"**Away Team Expected Goals:** {away_expected_goals:.2f}")
 
-# Function to Calculate Score Probabilities using Poisson distribution
+# Function to Calculate Score Probabilities
 def calculate_score_probabilities(home_goals, away_goals):
     home_probs = poisson.pmf(home_goals, home_expected_goals)
     away_probs = poisson.pmf(away_goals, away_expected_goals)
     return home_probs * away_probs
 
 # Predict Probabilities for Scorelines
-st.subheader("Match Prediction Probabilities")
-
-# Display probabilities for the most common scorelines
-for home_goals in range(5):
-    for away_goals in range(5):
+st.subheader("Score Probabilities for Match Outcome")
+for home_goals in range(int(home_expected_goals) - 2, int(home_expected_goals) + 3):
+    for away_goals in range(int(away_expected_goals) - 2, int(away_expected_goals) + 3):
         prob = calculate_score_probabilities(home_goals, away_goals)
-        st.write(f"Home {home_goals} - Away {away_goals}: Probability: {prob:.4f}")
+        st.write(f"{home_goals} - {away_goals}: {prob:.2%}")
 
-# Function to Calculate Halftime and Fulltime Probabilities
-def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
-    # Halftime Poisson probabilities (0-2 goals assumed)
-    ht_probs = np.outer(
-        [poisson.pmf(i, home_ht) for i in range(3)], 
-        [poisson.pmf(i, away_ht) for i in range(3)]
-    )
-
-    # Fulltime Poisson probabilities (0-5 goals assumed)
-    ft_probs = np.outer(
-        [poisson.pmf(i, home_ft) for i in range(6)], 
-        [poisson.pmf(i, away_ft) for i in range(6)]
-    )
-
-    # HT -> FT transition probabilities
-    ht_ft_probs = {
-        "1/1": np.sum(np.tril(ft_probs, -1)) * 0.6,  # Halftime Home, Fulltime Home
-        "1/X": np.sum(np.diag(ft_probs)) * 0.4,      # Halftime Home, Fulltime Draw
-        "1/2": np.sum(np.triu(ft_probs, 1)) * 0.2,   # Halftime Home, Fulltime Away
-        "X/1": np.sum(np.tril(ft_probs, -1)) * 0.4,  # Halftime Draw, Fulltime Home
-        "X/X": np.sum(np.diag(ft_probs)) * 0.6,      # Halftime Draw, Fulltime Draw
-        "X/2": np.sum(np.triu(ft_probs, 1)) * 0.4,   # Halftime Draw, Fulltime Away
-    }
-
-    return ht_probs, ft_probs, ht_ft_probs
-
-# Calculate halftime and fulltime goals
-home_ht_goals = home_attack_strength * away_defense_strength * 0.5  # Adjusted halftime goals
+# Displaying halftime and full-time probabilities based on Poisson
+home_ht_goals = home_attack_strength * away_defense_strength * 0.5
 away_ht_goals = away_attack_strength * home_defense_strength * 0.5
-home_ft_goals = home_attack_strength * away_defense_strength
-away_ft_goals = away_attack_strength * home_defense_strength
+ft_probs = poisson.pmf(home_ft_goals, home_expected_goals) * poisson.pmf(away_ft_goals, away_expected_goals)
 
-# Generate probabilities
-ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
+st.subheader("Halftime and Fulltime Probabilities")
+st.write("Halftime Probabilities:")
+for i in range(3):  # 0 to 2 goals for halftime
+    for j in range(3):  # 0 to 2 goals for away team
+        st.write(f"HT: {i} - FT: {j}: {poisson.pmf(i, home_ht_goals) * poisson.pmf(j, away_ht_goals):.2%}")
 
-# Example bookmaker odds
+st.write("Fulltime Probabilities:")
+for i in range(6):  # 0 to 5 goals for home team
+    for j in range(6):  # 0 to 5 goals for away team
+        st.write(f"FT: {i} - {j}: {ft_probs[i, j]:.2%}")
+
+# Sidebar for bookmaker odds and value bet calculation
+st.sidebar.header("Bookmaker Odds")
+odds_1_1 = st.sidebar.number_input("Odds for HT Home / FT Home", min_value=1.0, value=4.50)
+odds_1_X = st.sidebar.number_input("Odds for HT Home / FT Draw", min_value=1.0, value=5.00)
+odds_1_2 = st.sidebar.number_input("Odds for HT Home / FT Away", min_value=1.0, value=15.00)
+
 bookmaker_odds = {
-    "1/1": 4.50,  # Odds for HT Home / FT Home
-    "1/X": 5.00,  # Odds for HT Home / FT Draw
-    "1/2": 15.00, # Odds for HT Home / FT Away
-    "X/1": 6.00,  # Odds for HT Draw / FT Home
-    "X/X": 3.50,  # Odds for HT Draw / FT Draw
-    "X/2": 7.00,  # Odds for HT Draw / FT Away
+    "1/1": odds_1_1,  # Odds for HT Home / FT Home
+    "1/X": odds_1_X,  # Odds for HT Home / FT Draw
+    "1/2": odds_1_2,  # Odds for HT Home / FT Away
 }
 
-# Display probabilities and identify value bets
-st.subheader("HT/FT Probabilities and Value Bets")
+# Function to identify value bets
+def identify_value_bets(predicted_prob, bookmaker_odds, risk_factor=0.05):
+    implied_prob = 1 / bookmaker_odds * 100  # Calculate implied probability
+    margin = predicted_prob - implied_prob
+    value_bet = margin > risk_factor * implied_prob  # Only bet if margin exceeds threshold
+    return value_bet, margin
+
+# Identify value bets based on predictions
+st.subheader("Value Bets")
 for outcome, odds in bookmaker_odds.items():
     predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
-    implied_prob = 1 / odds * 100  # Calculate implied probability
-    margin = predicted_prob - implied_prob
-    value_bet = margin > 0.05 * implied_prob  # Only bet if margin exceeds threshold
-    
+    is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
     st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
-    if value_bet:
-        st.write(f"  🔥 **Value Bet!** Margin: {margin:.2f}%")
+    if is_value_bet:
+        st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
 
-# Custom recommendation based on highest value margin
+# Display the best recommended bet
 best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
 st.write(f"💡 **Recommended Bet:** {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
