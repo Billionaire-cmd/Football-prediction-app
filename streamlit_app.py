@@ -1,17 +1,17 @@
 import streamlit as st
-import pandas as pd
+import numpy as np
 
 # App Title
-st.title("🤖Rabiotic HT/FT Prediction with Advanced Probabilities")
+st.title("🤖 Rabiotic Advanced HT/FT Prediction Pro")
 
 # Sidebar Inputs
-st.sidebar.header("Input Parameters")
-st.sidebar.subheader("Win Probabilities (%)")
-home_prob = st.sidebar.number_input("Home Win Probability (%)", value=50.00)
-draw_prob = st.sidebar.number_input("Draw Probability (%)", value=30.00)
-away_prob = st.sidebar.number_input("Away Win Probability (%)", value=20.00)
+st.sidebar.header("Input Probabilities")
+st.sidebar.subheader("Match Outcome Probabilities")
+home_prob = st.sidebar.number_input("Home Win Probability (%)", value=50.00, min_value=0.0, max_value=100.0)
+draw_prob = st.sidebar.number_input("Draw Probability (%)", value=30.00, min_value=0.0, max_value=100.0)
+away_prob = st.sidebar.number_input("Away Win Probability (%)", value=20.00, min_value=0.0, max_value=100.0)
 
-st.sidebar.subheader("HT/FT Probabilities (%)")
+st.sidebar.subheader("HT/FT Probabilities")
 ht_ft_probs = {
     "1/1": st.sidebar.number_input("1/1 (%)", value=40.00),
     "1/X": st.sidebar.number_input("1/X (%)", value=5.00),
@@ -24,48 +24,55 @@ ht_ft_probs = {
     "2/2": st.sidebar.number_input("2/2 (%)", value=3.00),
 }
 
-st.sidebar.subheader("Exact Goals Probabilities (%)")
+st.sidebar.subheader("Exact Goals Probabilities")
 exact_goals_probs = {
-    1: st.sidebar.number_input("Exact 1 Goal (%)", value=36.78),
-    2: st.sidebar.number_input("Exact 2 Goals (%)", value=18.76),
-    3: st.sidebar.number_input("Exact 3 Goals (%)", value=6.38),
-    4: st.sidebar.number_input("Exact 4 Goals (%)", value=1.63),
-    5: st.sidebar.number_input("Exact 5 Goals (%)", value=0.33),
+    1: st.sidebar.number_input("Exact 1 Goal Probability (%)", value=36.78),
+    2: st.sidebar.number_input("Exact 2 Goals Probability (%)", value=18.76),
+    3: st.sidebar.number_input("Exact 3 Goals Probability (%)", value=6.38),
+    4: st.sidebar.number_input("Exact 4 Goals Probability (%)", value=1.63),
+    5: st.sidebar.number_input("Exact 5 Goals Probability (%)", value=0.33),
 }
 
-# Submit Button
-if st.sidebar.button("Submit Predictions"):
-    st.header("Calculated Recommendations")
+if st.sidebar.button("Submit Prediction"):
+    st.header("Predicted Outcomes and Recommendations")
 
-    # Processing: Placeholder for a Machine Learning Model
-    # For now, this uses a mathematical approach to determine the most likely outcome.
-    # Real-world applications can integrate ML models here.
+    # Convert input probabilities to normalized values
+    total_ht_ft = sum(ht_ft_probs.values())
+    normalized_ht_ft = {k: v / total_ht_ft for k, v in ht_ft_probs.items()}
 
-    # Determine the most realistic HT/FT based on input probabilities
-    ht_ft_df = pd.DataFrame(list(ht_ft_probs.items()), columns=["HT/FT", "Probability (%)"])
-    ht_ft_df["Probability (%)"] = ht_ft_df["Probability (%)"].astype(float)
-    most_likely_ht_ft = ht_ft_df.loc[ht_ft_df["Probability (%)"].idxmax()]
+    # Convert exact goals probabilities to normalized values
+    total_exact_goals = sum(exact_goals_probs.values())
+    normalized_exact_goals = {k: v / total_exact_goals for k, v in exact_goals_probs.items()}
 
-    # Determine the most realistic Exact Goals result
-    exact_goals_df = pd.DataFrame(list(exact_goals_probs.items()), columns=["Goals", "Probability (%)"])
-    exact_goals_df["Probability (%)"] = exact_goals_df["Probability (%)"].astype(float)
-    most_likely_exact_goals = exact_goals_df.loc[exact_goals_df["Probability (%)"].idxmax()]
+    # Mock Machine Learning Calculation for HT/FT Recommendation
+    # This is a placeholder for an advanced model that uses inputs to predict outcomes
+    def recommend_ht_ft(normalized_ht_ft):
+        return max(normalized_ht_ft, key=normalized_ht_ft.get)
 
-    # Determine overall most realistic outcome using a weighted approach
-    overall_probabilities = {
-        "Home": home_prob,
-        "Draw": draw_prob,
-        "Away": away_prob,
-    }
-    most_realistic_outcome = max(overall_probabilities, key=overall_probabilities.get)
+    def recommend_exact_goals(normalized_exact_goals):
+        return max(normalized_exact_goals, key=normalized_exact_goals.get)
 
-    # Display Recommendations
+    recommended_ht_ft = recommend_ht_ft(normalized_ht_ft)
+    recommended_exact_goals = recommend_exact_goals(normalized_exact_goals)
+
+    # Output
+    st.write("### Probabilities Overview")
+    st.write(f"Home Win Probability: {home_prob:.2f}%")
+    st.write(f"Draw Probability: {draw_prob:.2f}%")
+    st.write(f"Away Win Probability: {away_prob:.2f}%")
+    
+    st.write("### HT/FT Probabilities")
+    for key, value in ht_ft_probs.items():
+        st.write(f"{key}: {value:.2f}%")
+
+    st.write("### Exact Goals Probabilities")
+    for key, value in exact_goals_probs.items():
+        st.write(f"Exact {key} Goals: {value:.2f}%")
+
     st.write("### Recommendations")
-    st.write(f"**Most Realistic HT/FT Result:** {most_likely_ht_ft['HT/FT']} with a probability of {most_likely_ht_ft['Probability (%)']:.2f}%")
-    st.write(f"**Most Realistic Exact Goals:** {int(most_likely_exact_goals['Goals'])} with a probability of {most_likely_exact_goals['Probability (%)']:.2f}%")
-    st.write(f"**Overall Most Realistic Outcome:** {most_realistic_outcome}")
+    st.write(f"**Most Realistic HT/FT Result:** {recommended_ht_ft}")
+    st.write(f"**Most Likely Exact Goals:** {recommended_exact_goals}")
 
-    # Winning Strategy Output
-    st.success("Based on the probabilities provided, the recommended HT/FT result for victory is **{0}** with an emphasis on ensuring **{1} goals**.".format(
-        most_likely_ht_ft["HT/FT"], int(most_likely_exact_goals["Goals"])
-    ))
+    st.write("### Prediction Summary")
+    st.write(f"Based on the inputs, the most realistic outcome is an HT/FT result of **{recommended_ht_ft}** "
+             f"and an exact goal count of **{recommended_exact_goals} goals**.")
