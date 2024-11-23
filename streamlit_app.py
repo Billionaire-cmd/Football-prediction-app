@@ -69,11 +69,12 @@ st.markdown("""
     Adjust inputs to see real-time predictions and recommendations for your next bet.
 """)
 
-# Input parameters (can be replaced with user inputs in the Streamlit app)
-home_attack = st.slider('Home Attack Strength', 0.5, 3.0, 1.8)  # Home team attack strength
-away_defense = st.slider('Away Defense Strength', 0.5, 3.0, 1.3)  # Away team defensive strength
-away_attack = st.slider('Away Attack Strength', 0.5, 3.0, 1.5)  # Away team attack strength
-home_defense = st.slider('Home Defense Strength', 0.5, 3.0, 1.4)  # Home team defensive strength
+# Sidebar for inputs
+st.sidebar.title("Adjust Match Parameters")
+home_attack = st.sidebar.slider('Home Attack Strength', 0.5, 3.0, 1.8)  # Home team attack strength
+away_defense = st.sidebar.slider('Away Defense Strength', 0.5, 3.0, 1.3)  # Away team defensive strength
+away_attack = st.sidebar.slider('Away Attack Strength', 0.5, 3.0, 1.5)  # Away team attack strength
+home_defense = st.sidebar.slider('Home Defense Strength', 0.5, 3.0, 1.4)  # Home team defensive strength
 
 # Calculate halftime and fulltime goals
 home_ht_goals = home_attack * away_defense * 0.5  # Adjusted halftime goals
