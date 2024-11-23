@@ -69,12 +69,13 @@ st.markdown("""
     Adjust inputs to see real-time predictions and recommendations for your next bet.
 """)
 
-# Sidebar for inputs
+# Sidebar for inputs - set fixed default values for the sliders
 st.sidebar.title("Adjust Match Parameters")
-home_attack = st.sidebar.slider('Home Attack Strength', 0.5, 3.0, 1.8)  # Home team attack strength
-away_defense = st.sidebar.slider('Away Defense Strength', 0.5, 3.0, 1.3)  # Away team defensive strength
-away_attack = st.sidebar.slider('Away Attack Strength', 0.5, 3.0, 1.5)  # Away team attack strength
-home_defense = st.sidebar.slider('Home Defense Strength', 0.5, 3.0, 1.4)  # Home team defensive strength
+
+home_attack = 1.8  # Fixed value for home attack strength
+away_defense = 1.3  # Fixed value for away defense strength
+away_attack = 1.5  # Fixed value for away attack strength
+home_defense = 1.4  # Fixed value for home defense strength
 
 # Calculate halftime and fulltime goals
 home_ht_goals = home_attack * away_defense * 0.5  # Adjusted halftime goals
