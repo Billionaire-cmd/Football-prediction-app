@@ -1,66 +1,15 @@
-import streamlit as st
+import numpy as np
+import pandas as pd
 from scipy.stats import poisson
+import streamlit as st
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
-# Title of the App
-st.title("🤖 Rabiotic Football Match Outcome Predictor")
+# Set up the Streamlit page configuration
+st.set_page_config(page_title="🤖 Rabiotic Advanced Prediction", layout="wide")
 
-# Sidebar Input
-st.sidebar.header("Input Team Data")
-
-st.sidebar.subheader("Home Team")
-avg_home_goals_scored = st.sidebar.number_input("Average Goals Scored (Home)", min_value=0.0, value=1.5, step=0.1)
-avg_home_goals_conceded = st.sidebar.number_input("Average Goals Conceded (Home)", min_value=0.0, value=1.2, step=0.1)
-avg_home_points = st.sidebar.number_input("Average Points (Home)", min_value=0.0, value=1.8, step=0.1)
-
-st.sidebar.subheader("Away Team")
-avg_away_goals_scored = st.sidebar.number_input("Average Goals Scored (Away)", min_value=0.0, value=1.2, step=0.1)
-avg_away_goals_conceded = st.sidebar.number_input("Average Goals Conceded (Away)", min_value=0.0, value=1.3, step=0.1)
-avg_away_points = st.sidebar.number_input("Average Points (Away)", min_value=0.0, value=1.4, step=0.1)
-
-st.sidebar.subheader("League Averages")
-league_avg_goals_scored = st.sidebar.number_input("League Average Goals Scored per Match", min_value=0.1, value=1.5, step=0.1)
-league_avg_goals_conceded = st.sidebar.number_input("League Average Goals Conceded per Match", min_value=0.1, value=1.5, step=0.1)
-
-# Calculate Attack and Defense Strengths
-home_attack_strength = avg_home_goals_scored / league_avg_goals_scored
-home_defense_strength = avg_home_goals_conceded / league_avg_goals_conceded
-
-away_attack_strength = avg_away_goals_scored / league_avg_goals_scored
-away_defense_strength = avg_away_goals_conceded / league_avg_goals_conceded
-
-# Calculate Expected Goals
-home_expected_goals = home_attack_strength * away_defense_strength * league_avg_goals_scored
-away_expected_goals = away_attack_strength * home_defense_strength * league_avg_goals_scored
-
-# Display Calculated Strengths and Expected Goals
-st.subheader("Calculated Strengths")
-st.write(f"**Home Attack Strength:** {home_attack_strength:.2f}")
-st.write(f"**Home Defense Strength:** {home_defense_strength:.2f}")
-st.write(f"**Away Attack Strength:** {away_attack_strength:.2f}")
-st.write(f"**Away Defense Strength:** {away_defense_strength:.2f}")
-
-st.subheader("Expected Goals")
-st.write(f"**Home Team Expected Goals:** {home_expected_goals:.2f}")
-st.write(f"**Away Team Expected Goals:** {away_expected_goals:.2f}")
-
-# Function to Calculate Score Probabilities
-def calculate_score_probabilities(home_goals, away_goals):
-    home_probs = poisson.pmf(home_goals, home_expected_goals)
-    away_probs = poisson.pmf(away_goals, away_expected_goals)
-    return home_probs * away_probs
-
-# Predict Probabilities for Scorelines
-st.subheader("Predicted Probabilities for Scorelines")
-score_probabilities = {}
-for home_goals in range(6):
-    for away_goals in range(6):
-        score_probabilities[f"{home_goals}-{away_goals}"] = calculate_score_probabilities(home_goals, away_goals)
-
-# Display Predicted Probabilities
-for scoreline, prob in score_probabilities.items():
-    st.write(f"**{scoreline}**: {prob * 100:.2f}%")
-
-# Function to Calculate Halftime/Fulltime Probabilities
+# Function to calculate halftime and full-time probabilities
 def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
     # Halftime Poisson probabilities (0-2 goals assumed)
     ht_probs = np.outer(
@@ -86,28 +35,58 @@ def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
 
     return ht_probs, ft_probs, ht_ft_probs
 
-# Calculate halftime and fulltime goals
-home_ht_goals = home_attack_strength * away_defense_strength * 0.5  # Adjusted halftime goals
-away_ht_goals = away_attack_strength * home_defense_strength * 0.5
-home_ft_goals = home_attack_strength * away_defense_strength
-away_ft_goals = away_attack_strength * home_defense_strength
-
-# Generate probabilities for HT/FT
-ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
-
-# Display HT/FT Probabilities
-st.subheader("HT/FT Probabilities")
-for outcome, prob in ht_ft_probs.items():
-    st.write(f"**{outcome}:** {prob * 100:.2f}%")
-
-# Function to identify value bets based on odds and predicted probabilities
+# Function to calculate value bets
 def identify_value_bets(predicted_prob, bookmaker_odds, risk_factor=0.05):
     implied_prob = 1 / bookmaker_odds * 100  # Calculate implied probability
     margin = predicted_prob - implied_prob
     value_bet = margin > risk_factor * implied_prob  # Only bet if margin exceeds threshold
     return value_bet, margin
 
-# Example bookmaker odds for HT/FT outcomes
+# Machine Learning Model for Additional Refinement
+def train_ml_model(historical_data):
+    # Features: [home_attack, away_defense, home_defense, away_attack, etc.]
+    X = historical_data[['home_attack', 'away_defense', 'home_defense', 'away_attack']]
+    y = historical_data['outcome']  # Target: [1 for Home Win, 0 for Draw, -1 for Away Win]
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Train logistic regression model
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+
+    # Evaluate the model
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    return model, accuracy
+
+# Set up Streamlit interface
+st.title("🤖 Rabiotic Advanced Prediction")
+
+st.markdown("""
+    Welcome to **Rabiotic Advanced Prediction**, the ultimate football match prediction tool.
+    Here, you'll find Poisson-based predictions, value bet identification, and more.
+    Adjust inputs to see real-time predictions and recommendations for your next bet.
+""")
+
+# Sidebar for inputs - set fixed default values for the sliders
+st.sidebar.title("Adjust Match Parameters")
+
+home_attack = 1.8  # Fixed value for home attack strength
+away_defense = 1.3  # Fixed value for away defense strength
+away_attack = 1.5  # Fixed value for away attack strength
+home_defense = 1.4  # Fixed value for home defense strength
+
+# Calculate halftime and fulltime goals
+home_ht_goals = home_attack * away_defense * 0.5  # Adjusted halftime goals
+away_ht_goals = away_attack * home_defense * 0.5
+home_ft_goals = home_attack * away_defense
+away_ft_goals = away_attack * home_defense
+
+# Generate probabilities
+ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
+
+# Example bookmaker odds
 bookmaker_odds = {
     "1/1": 4.50,  # Odds for HT Home / FT Home
     "1/X": 5.00,  # Odds for HT Home / FT Draw
@@ -117,11 +96,37 @@ bookmaker_odds = {
     "X/2": 7.00,  # Odds for HT Draw / FT Away
 }
 
-# Display value bets
-st.subheader("Value Bets")
+# Display probabilities and identify value bets
+st.markdown("### HT/FT Probabilities and Value Bets")
 for outcome, odds in bookmaker_odds.items():
     predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
     is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
     st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
     if is_value_bet:
         st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
+
+# Custom recommendation based on highest value margin
+best_bet = max(bookmaker_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / bookmaker_odds[x])
+st.write(f"💡 **Recommended Bet:** {best_bet} (Probability: {ht_ft_probs[best_bet]*100:.2f}%, Odds: {bookmaker_odds[best_bet]})")
+
+# Example historical data for training the model
+historical_data = {
+    'home_attack': [1.8, 2.0, 1.6],
+    'away_defense': [1.3, 1.4, 1.2],
+    'home_defense': [1.4, 1.3, 1.6],
+    'away_attack': [1.5, 1.7, 1.4],
+    'outcome': [1, 0, -1]  # 1 = Home Win, 0 = Draw, -1 = Away Win
+}
+
+historical_data = pd.DataFrame(historical_data)
+
+# Train the machine learning model
+model, accuracy = train_ml_model(historical_data)
+
+st.write(f"Model Accuracy: {accuracy * 100:.2f}%")
+
+# Use the trained model to refine the predictions for the next match
+match_features = np.array([home_attack, away_defense, home_defense, away_attack]).reshape(1, -1)
+predicted_outcome = model.predict(match_features)
+st.write(f"Predicted Match Outcome: {'Home Win' if predicted_outcome == 1 else 'Draw' if predicted_outcome == 0 else 'Away Win'}")
+
