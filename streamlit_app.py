@@ -1,117 +1,73 @@
-import numpy as np
-import pandas as pd
-from scipy.stats import poisson
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 import streamlit as st
-import matplotlib.pyplot as plt
-from math import factorial
+import numpy as np
 
-# Set up the Streamlit page configuration
-st.set_page_config(page_title="🤖 Advanced Rabiotic Prediction App", layout="wide")
+# App title
+st.title("🤖 Rabiotic Realistic Halftime/Full-time Predictor")
 
-# Streamlit Application Title
-st.title("🤖 Advanced Rabiotic Football Outcome Predictor")
-st.markdown("""
-Predict football match outcomes using advanced metrics like:
-- **Poisson Distribution**
-- **Machine Learning**
-- **Odds Analysis**
-- **Margin Calculations**
-""")
+# Input section
+st.header("Input Parameters")
 
-# Sidebar for Input Parameters
-st.sidebar.header("Input Parameters")
+# Home and Away Team
+home_team = st.text_input("Home Team", "Team A")
+away_team = st.text_input("Away Team", "Team B")
 
-# Match and Odds Input
-home_team = st.sidebar.text_input("Home Team", "Team A")
-away_team = st.sidebar.text_input("Away Team", "Team B")
-goals_home_mean = st.sidebar.number_input("Expected Goals (Home)", min_value=0.1, value=1.2, step=0.1)
-goals_away_mean = st.sidebar.number_input("Expected Goals (Away)", min_value=0.1, value=1.1, step=0.1)
+# Expected Goals for Home and Away
+home_goals = st.number_input("Expected Goals (Home)", min_value=0.0, value=1.21)
+away_goals = st.number_input("Expected Goals (Away)", min_value=0.0, value=1.64)
 
-# Odds Input
-home_win_odds = st.sidebar.number_input("Odds: Home Win", value=2.50, step=0.01)
-draw_odds = st.sidebar.number_input("Odds: Draw", value=3.20, step=0.01)
-away_win_odds = st.sidebar.number_input("Odds: Away Win", value=3.10, step=0.01)
+# Odds for the outcomes
+st.subheader("Match Outcome Odds")
+home_win_odds = st.number_input("Odds: Home Win", min_value=0.0, value=1.50)
+draw_odds = st.number_input("Odds: Draw", min_value=0.0, value=4.00)
+away_win_odds = st.number_input("Odds: Away Win", min_value=0.0, value=7.00)
 
 # HT/FT Odds
-ht_ft_odds = {
-    "1/1": st.sidebar.number_input("HT Home / FT Home Odds", value=3.00, step=0.01),
-    "1/X": st.sidebar.number_input("HT Home / FT Draw Odds", value=4.00, step=0.01),
-    "1/2": st.sidebar.number_input("HT Home / FT Away Odds", value=6.00, step=0.01),
-    "X/1": st.sidebar.number_input("HT Draw / FT Home Odds", value=4.50, step=0.01),
-    "X/X": st.sidebar.number_input("HT Draw / FT Draw Odds", value=4.00, step=0.01),
-    "X/2": st.sidebar.number_input("HT Draw / FT Away Odds", value=4.20, step=0.01),
-    "2/1": st.sidebar.number_input("HT Away / FT Home Odds", value=8.00, step=0.01),
-    "2/X": st.sidebar.number_input("HT Away / FT Draw Odds", value=8.50, step=0.01),
-    "2/2": st.sidebar.number_input("HT Away / FT Away Odds", value=5.00, step=0.01),
-}
+st.subheader("Halftime/Full-time Odds")
+ht_home_ft_home_odds = st.number_input("HT Home / FT Home Odds", min_value=0.0, value=2.11)
+ht_home_ft_draw_odds = st.number_input("HT Home / FT Draw Odds", min_value=0.0, value=20.04)
+ht_home_ft_away_odds = st.number_input("HT Home / FT Away Odds", min_value=0.0, value=50.00)
 
-# Functions
+ht_draw_ft_home_odds = st.number_input("HT Draw / FT Home Odds", min_value=0.0, value=3.76)
+ht_draw_ft_draw_odds = st.number_input("HT Draw / FT Draw Odds", min_value=0.0, value=5.30)
+ht_draw_ft_away_odds = st.number_input("HT Draw / FT Away Odds", min_value=0.0, value=13.96)
 
-def calculate_margin_difference(odds, margin_target):
-    return round(margin_target - odds, 2)
+ht_away_ft_home_odds = st.number_input("HT Away / FT Home Odds", min_value=0.0, value=29.73)
+ht_away_ft_draw_odds = st.number_input("HT Away / FT Draw Odds", min_value=0.0, value=21.51)
+ht_away_ft_away_odds = st.number_input("HT Away / FT Away Odds", min_value=0.0, value=12.64)
 
-def poisson_prob(mean, goal):
-    return (np.exp(-mean) * mean**goal) / factorial(goal)
+# Logic to calculate Halftime/Full-time Correct Outcome Recommendation
+# Here we assume the model recommends 1/1 (Home win in both HT and FT) as the most likely outcome
+recommended_ht_ft = "1/1"
+recommended_odds = ht_home_ft_home_odds
 
-def calculate_probabilities(home_mean, away_mean, max_goals=5):
-    home_probs = [poisson_prob(home_mean, g) for g in range(max_goals + 1)]
-    away_probs = [poisson_prob(away_mean, g) for g in range(max_goals + 1)]
-    return home_probs, away_probs
+# Display the recommended HT/FT outcome and its odds
+st.subheader(f"Recommended Halftime/Full-time Outcome: {recommended_ht_ft}")
+st.write(f"The predicted best halftime/full-time outcome is **{recommended_ht_ft}** with odds of **{recommended_odds}**.")
 
-def calculate_ht_ft_probs(home_ht, away_ht, home_ft, away_ft):
-    # Halftime Poisson probabilities
-    ht_probs = np.outer(
-        [poisson.pmf(i, home_ht) for i in range(3)], 
-        [poisson.pmf(i, away_ht) for i in range(3)]
-    )
+# Additional calculations or recommendations can go here
+st.subheader("Additional Information & Insights")
 
-    # Fulltime Poisson probabilities
-    ft_probs = np.outer(
-        [poisson.pmf(i, home_ft) for i in range(6)], 
-        [poisson.pmf(i, away_ft) for i in range(6)]
-    )
+# Example: Estimated probability of 1/1 based on odds
+odds_to_probability = lambda odds: 1 / odds
+prob_1_1 = odds_to_probability(ht_home_ft_home_odds)
 
-    # HT -> FT transition probabilities
-    ht_ft_probs = {
-        "1/1": np.sum(np.tril(ft_probs, -1)) * 0.6,  # HT Home, FT Home
-        "1/X": np.sum(np.diag(ft_probs)) * 0.4,      # HT Home, FT Draw
-        "1/2": np.sum(np.triu(ft_probs, 1)) * 0.2,   # HT Home, FT Away
-        "X/1": np.sum(np.tril(ft_probs, -1)) * 0.4,  # HT Draw, FT Home
-        "X/X": np.sum(np.diag(ft_probs)) * 0.6,      # HT Draw, FT Draw
-        "X/2": np.sum(np.triu(ft_probs, 1)) * 0.4,   # HT Draw, FT Away
-        "2/1": np.sum(np.tril(ft_probs, -1)) * 0.3,  # HT Away, FT Home
-        "2/X": np.sum(np.diag(ft_probs)) * 0.5,      # HT Away, FT Draw
-        "2/2": np.sum(np.triu(ft_probs, 1)) * 0.7,   # HT Away, FT Away
-    }
+st.write(f"Estimated Probability of 1/1 (HT/FT) = {prob_1_1:.2%}")
 
-    return ht_probs, ft_probs, ht_ft_probs
+# Display some additional metrics or insights
+# Example: Home Team strength and Away Team weaknesses interaction
+home_attack_strength = home_goals * 1.0  # assuming strength is proportional to expected goals
+away_defense_strength = away_goals * 0.8  # assuming defense strength inversely correlates with goals
 
-def identify_value_bets(predicted_prob, bookmaker_odds, risk_factor=0.05):
-    implied_prob = 1 / bookmaker_odds * 100
-    margin = predicted_prob - implied_prob
-    value_bet = margin > risk_factor * implied_prob
-    return value_bet, margin
+st.write(f"Home Team Attack Strength (HT): {home_attack_strength:.2f}")
+st.write(f"Away Team Defense Weakness (HT): {away_defense_strength:.2f}")
 
-# Generate probabilities
-home_ht_goals = goals_home_mean * 0.5
-away_ht_goals = goals_away_mean * 0.5
-home_ft_goals = goals_home_mean
-away_ft_goals = goals_away_mean
+# Calculate expected HT/FT probabilities for 1/1
+expected_home_score = home_goals * home_attack_strength / away_defense_strength
+expected_away_score = away_goals * away_attack_strength / home_defense_strength
 
-ht_probs, ft_probs, ht_ft_probs = calculate_ht_ft_probs(home_ht_goals, away_ht_goals, home_ft_goals, away_ft_goals)
+st.write(f"Expected Home Score (HT): {expected_home_score:.2f}")
+st.write(f"Expected Away Score (HT): {expected_away_score:.2f}")
 
-# Display HT/FT probabilities and identify value bets
-st.markdown("### HT/FT Probabilities and Value Bets")
-for outcome, odds in ht_ft_odds.items():
-    predicted_prob = ht_ft_probs[outcome] * 100  # Convert to percentage
-    is_value_bet, value_margin = identify_value_bets(predicted_prob, odds)
-    st.write(f"{outcome}: {predicted_prob:.2f}% (Bookmaker Odds: {odds})")
-    if is_value_bet:
-        st.write(f"  🔥 **Value Bet!** Margin: {value_margin:.2f}%")
-
-# Best bet recommendation
-best_bet = max(ht_ft_odds.keys(), key=lambda x: ht_ft_probs[x] - 1 / ht_ft_odds[x])
-st.write(f"\n### Best Recommended Bet: {best_bet}")
+# Example of adjusted odds for HT/FT based on current inputs
+adjusted_ht_home_ft_home_odds = ht_home_ft_home_odds * (home_attack_strength / away_defense_strength)
+st.write(f"Adjusted Odds for HT Home / FT Home (adjusted): {adjusted_ht_home_ft_home_odds:.2f}")
