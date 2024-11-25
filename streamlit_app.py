@@ -35,43 +35,60 @@ ht_away_ft_home_odds = st.number_input("HT Away / FT Home Odds", min_value=0.0, 
 ht_away_ft_draw_odds = st.number_input("HT Away / FT Draw Odds", min_value=0.0, value=21.51)
 ht_away_ft_away_odds = st.number_input("HT Away / FT Away Odds", min_value=0.0, value=12.64)
 
-# Logic to calculate HT/FT Correct Score Recommendation
-# Here we assume the model recommends 1/1 as the most likely correct score outcome
-recommended_ht_ft = "1/1"
-recommended_odds = ht_home_ft_home_odds
-
-# Display the recommended HT/FT score and its odds
-st.subheader(f"Recommended HT/FT Outcome: {recommended_ht_ft}")
-st.write(f"The predicted best halftime/full-time outcome is **{recommended_ht_ft}** with odds of **{recommended_odds}**.")
-
-# Additional calculations or recommendations can go here
-st.subheader("Additional Information & Insights")
-
-# Example calculation: Estimated probability of HT/FT 1/1 based on odds
+# Function to calculate probability from odds
 odds_to_probability = lambda odds: 1 / odds
-prob_1_1 = odds_to_probability(ht_home_ft_home_odds)
 
-st.write(f"Estimated Probability of 1/1 (HT/FT) = {prob_1_1:.2%}")
+# Submit button to trigger prediction
+submit_button = st.button("Submit Prediction")
 
-# Calculate expected scores for Home and Away teams (HT/FT)
-expected_home_score = home_goals  # Home goals are expected for the entire match
-expected_away_score = away_goals  # Away goals are expected for the entire match
+if submit_button:
+    # Calculate HT/FT Recommended Outcome based on Odds
+    recommended_ht_ft = "1/1"
+    recommended_odds = ht_home_ft_home_odds
 
-# Probability for different outcomes
-st.write(f"Expected Home Score (Full Time): {expected_home_score:.2f}")
-st.write(f"Expected Away Score (Full Time): {expected_away_score:.2f}")
+    # Display Recommended Outcome and Odds
+    st.subheader(f"Recommended HT/FT Outcome: {recommended_ht_ft}")
+    st.write(f"The predicted best halftime/full-time outcome is **{recommended_ht_ft}** with odds of **{recommended_odds}**.")
 
-# HT/FT Outcomes and Probabilities
-st.write(f"HT Home / FT Home Odds: {ht_home_ft_home_odds}")
-st.write(f"HT Home / FT Draw Odds: {ht_home_ft_draw_odds}")
-st.write(f"HT Home / FT Away Odds: {ht_home_ft_away_odds}")
+    # Additional calculations or recommendations
+    prob_1_1 = odds_to_probability(ht_home_ft_home_odds)
+    st.write(f"Estimated Probability of 1/1 (HT/FT) = {prob_1_1:.2%}")
 
-st.write(f"HT Draw / FT Home Odds: {ht_draw_ft_home_odds}")
-st.write(f"HT Draw / FT Draw Odds: {ht_draw_ft_draw_odds}")
-st.write(f"HT Draw / FT Away Odds: {ht_draw_ft_away_odds}")
+    # Calculate expected scores for Home and Away teams (HT/FT)
+    expected_home_score = home_goals
+    expected_away_score = away_goals
 
-st.write(f"HT Away / FT Home Odds: {ht_away_ft_home_odds}")
-st.write(f"HT Away / FT Draw Odds: {ht_away_ft_draw_odds}")
-st.write(f"HT Away / FT Away Odds: {ht_away_ft_away_odds}")
+    st.write(f"Expected Home Score (Full Time): {expected_home_score:.2f}")
+    st.write(f"Expected Away Score (Full Time): {expected_away_score:.2f}")
 
-# Optional: Calculating best value for other HT/FT combinations can be done here
+    # HT/FT Outcomes and Probabilities
+    st.write(f"HT Home / FT Home Odds: {ht_home_ft_home_odds}")
+    st.write(f"HT Home / FT Draw Odds: {ht_home_ft_draw_odds}")
+    st.write(f"HT Home / FT Away Odds: {ht_home_ft_away_odds}")
+
+    st.write(f"HT Draw / FT Home Odds: {ht_draw_ft_home_odds}")
+    st.write(f"HT Draw / FT Draw Odds: {ht_draw_ft_draw_odds}")
+    st.write(f"HT Draw / FT Away Odds: {ht_draw_ft_away_odds}")
+
+    st.write(f"HT Away / FT Home Odds: {ht_away_ft_home_odds}")
+    st.write(f"HT Away / FT Draw Odds: {ht_away_ft_draw_odds}")
+    st.write(f"HT Away / FT Away Odds: {ht_away_ft_away_odds}")
+
+    # Optional: Display more calculated information or visualizations
+    # Example of showing HT/FT probabilities for all outcomes
+    st.subheader("HT/FT Outcome Probabilities")
+    outcomes = {
+        "HT Home / FT Home": odds_to_probability(ht_home_ft_home_odds),
+        "HT Home / FT Draw": odds_to_probability(ht_home_ft_draw_odds),
+        "HT Home / FT Away": odds_to_probability(ht_home_ft_away_odds),
+        "HT Draw / FT Home": odds_to_probability(ht_draw_ft_home_odds),
+        "HT Draw / FT Draw": odds_to_probability(ht_draw_ft_draw_odds),
+        "HT Draw / FT Away": odds_to_probability(ht_draw_ft_away_odds),
+        "HT Away / FT Home": odds_to_probability(ht_away_ft_home_odds),
+        "HT Away / FT Draw": odds_to_probability(ht_away_ft_draw_odds),
+        "HT Away / FT Away": odds_to_probability(ht_away_ft_away_odds),
+    }
+
+    # Display the probabilities
+    for outcome, prob in outcomes.items():
+        st.write(f"{outcome}: {prob:.2%}")
