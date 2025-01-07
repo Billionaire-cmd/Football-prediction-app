@@ -35,7 +35,7 @@ def predict_double_chance(home_draw_odds, home_away_odds, draw_away_odds):
     }
 
 # Streamlit app setup
-st.title("🤖✅Rabiotic HT/FT Correct score Prector")
+st.title("🤖 Rabiotic HT/FT Correct score Predictor ")
 
 # Inputs for Team A and Team B
 team_a = st.text_input("Enter Team A Name", "Team A")
