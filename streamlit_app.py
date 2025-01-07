@@ -1,94 +1,97 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
+from scipy.stats import poisson
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
 
-# App title
-st.title("🤖 Rabiotic Realistic Halftime/Full-time Predictor")
+# Define functions for Poisson distribution, machine learning model, etc.
 
-# Input section
-st.header("Input Parameters")
+def poisson_predict(home_goals, away_goals, home_lambda, away_lambda):
+    """
+    Predict the probability of a specific score using Poisson distribution.
+    """
+    home_prob = poisson.pmf(home_goals, home_lambda)
+    away_prob = poisson.pmf(away_goals, away_lambda)
+    return home_prob * away_prob
 
-# Home and Away Team
-home_team = st.text_input("Home Team", "Team A")
-away_team = st.text_input("Away Team", "Team B")
+def regression_model(team_a_stats, team_b_stats):
+    """
+    Simple placeholder function for regression or ML model prediction.
+    You can replace this with any model you want to use.
+    """
+    # Example: Simple linear regression (can be expanded with better models)
+    X = np.array([team_a_stats, team_b_stats]).reshape(-1, 1)
+    y = np.array([1])  # Placeholder, needs actual results
+    model = LinearRegression().fit(X, y)
+    return model.predict(X)
 
-# Expected Goals for Home and Away
-home_goals = st.number_input("Expected Goals (Home)", min_value=0.0, value=1.21)
-away_goals = st.number_input("Expected Goals (Away)", min_value=0.0, value=1.64)
-
-# Match Odds
-st.subheader("Match Odds")
-home_win_odds = st.number_input("Odds: Home Win", min_value=0.0, value=1.50)
-draw_odds = st.number_input("Odds: Draw", min_value=0.0, value=4.00)
-away_win_odds = st.number_input("Odds: Away Win", min_value=0.0, value=7.00)
-
-# HT/FT Odds
-st.subheader("HT/FT Odds")
-ht_home_ft_home_odds = st.number_input("HT Home / FT Home Odds", min_value=0.0, value=2.11)
-ht_home_ft_draw_odds = st.number_input("HT Home / FT Draw Odds", min_value=0.0, value=20.04)
-ht_home_ft_away_odds = st.number_input("HT Home / FT Away Odds", min_value=0.0, value=50.00)
-
-ht_draw_ft_home_odds = st.number_input("HT Draw / FT Home Odds", min_value=0.0, value=3.76)
-ht_draw_ft_draw_odds = st.number_input("HT Draw / FT Draw Odds", min_value=0.0, value=5.30)
-ht_draw_ft_away_odds = st.number_input("HT Draw / FT Away Odds", min_value=0.0, value=13.96)
-
-ht_away_ft_home_odds = st.number_input("HT Away / FT Home Odds", min_value=0.0, value=29.73)
-ht_away_ft_draw_odds = st.number_input("HT Away / FT Draw Odds", min_value=0.0, value=21.51)
-ht_away_ft_away_odds = st.number_input("HT Away / FT Away Odds", min_value=0.0, value=12.64)
-
-# Function to calculate probability from odds
-odds_to_probability = lambda odds: 1 / odds
-
-# Submit button to trigger prediction
-submit_button = st.button("Submit Prediction")
-
-if submit_button:
-    # Calculate HT/FT Recommended Outcome based on Odds
-    recommended_ht_ft = "1/1"
-    recommended_odds = ht_home_ft_home_odds
-
-    # Display Recommended Outcome and Odds
-    st.subheader(f"Recommended HT/FT Outcome: {recommended_ht_ft}")
-    st.write(f"The predicted best halftime/full-time outcome is **{recommended_ht_ft}** with odds of **{recommended_odds}**.")
-
-    # Additional calculations or recommendations
-    prob_1_1 = odds_to_probability(ht_home_ft_home_odds)
-    st.write(f"Estimated Probability of 1/1 (HT/FT) = {prob_1_1:.2%}")
-
-    # Calculate expected scores for Home and Away teams (HT/FT)
-    expected_home_score = home_goals
-    expected_away_score = away_goals
-
-    st.write(f"Expected Home Score (Full Time): {expected_home_score:.2f}")
-    st.write(f"Expected Away Score (Full Time): {expected_away_score:.2f}")
-
-    # HT/FT Outcomes and Probabilities
-    st.write(f"HT Home / FT Home Odds: {ht_home_ft_home_odds}")
-    st.write(f"HT Home / FT Draw Odds: {ht_home_ft_draw_odds}")
-    st.write(f"HT Home / FT Away Odds: {ht_home_ft_away_odds}")
-
-    st.write(f"HT Draw / FT Home Odds: {ht_draw_ft_home_odds}")
-    st.write(f"HT Draw / FT Draw Odds: {ht_draw_ft_draw_odds}")
-    st.write(f"HT Draw / FT Away Odds: {ht_draw_ft_away_odds}")
-
-    st.write(f"HT Away / FT Home Odds: {ht_away_ft_home_odds}")
-    st.write(f"HT Away / FT Draw Odds: {ht_away_ft_draw_odds}")
-    st.write(f"HT Away / FT Away Odds: {ht_away_ft_away_odds}")
-
-    # Optional: Display more calculated information or visualizations
-    # Example of showing HT/FT probabilities for all outcomes
-    st.subheader("HT/FT Outcome Probabilities")
-    outcomes = {
-        "HT Home / FT Home": odds_to_probability(ht_home_ft_home_odds),
-        "HT Home / FT Draw": odds_to_probability(ht_home_ft_draw_odds),
-        "HT Home / FT Away": odds_to_probability(ht_home_ft_away_odds),
-        "HT Draw / FT Home": odds_to_probability(ht_draw_ft_home_odds),
-        "HT Draw / FT Draw": odds_to_probability(ht_draw_ft_draw_odds),
-        "HT Draw / FT Away": odds_to_probability(ht_draw_ft_away_odds),
-        "HT Away / FT Home": odds_to_probability(ht_away_ft_home_odds),
-        "HT Away / FT Draw": odds_to_probability(ht_away_ft_draw_odds),
-        "HT Away / FT Away": odds_to_probability(ht_away_ft_away_odds),
+def predict_outcome(home_odds, draw_odds, away_odds):
+    """
+    Calculate outcome probabilities based on the odds and historical analysis.
+    """
+    home_prob = 1 / home_odds
+    draw_prob = 1 / draw_odds
+    away_prob = 1 / away_odds
+    total = home_prob + draw_prob + away_prob
+    return {
+        "Home Win Probability": home_prob / total,
+        "Draw Probability": draw_prob / total,
+        "Away Win Probability": away_prob / total
     }
 
-    # Display the probabilities
-    for outcome, prob in outcomes.items():
-        st.write(f"{outcome}: {prob:.2%}")
+# Set up the Streamlit UI
+
+st.title('🤖💯Rabiotic Instant Virtuals Football Match Prediction App')
+
+# User inputs for Team A and Team B
+team_a = st.text_input("Enter Team A Name")
+team_b = st.text_input("Enter Team B Name")
+
+# User inputs for Double Chance odds
+home_odds = st.number_input("Enter Home Win Odds", min_value=1.0, step=0.01)
+draw_odds = st.number_input("Enter Draw Odds", min_value=1.0, step=0.01)
+away_odds = st.number_input("Enter Away Win Odds", min_value=1.0, step=0.01)
+
+# Prediction button
+if st.button("Predict Match Outcome"):
+    # Placeholder: Use real statistics for these values
+    team_a_stats = {
+        "average_goals": 1.3,
+        "win_percentage": 0.73,
+    }
+    team_b_stats = {
+        "average_goals": 1.7,
+        "win_percentage": 0.80,
+    }
+    
+    # Poisson model prediction for HT/FT scores
+    home_lambda = team_a_stats["average_goals"]
+    away_lambda = team_b_stats["average_goals"]
+
+    predicted_outcome = predict_outcome(home_odds, draw_odds, away_odds)
+
+    st.write("Predicted Outcome Probabilities:")
+    st.write(f"Home Win Probability: {predicted_outcome['Home Win Probability']:.2f}")
+    st.write(f"Draw Probability: {predicted_outcome['Draw Probability']:.2f}")
+    st.write(f"Away Win Probability: {predicted_outcome['Away Win Probability']:.2f}")
+
+    # Calculate Poisson probabilities for HT and FT scores
+    ht_predictions = []
+    for i in range(4):  # Home team goals range (0-3)
+        for j in range(4):  # Away team goals range (0-3)
+            ht_prob = poisson_predict(i, j, home_lambda, away_lambda)
+            ht_predictions.append((i, j, ht_prob))
+
+    # Display HT/FT predictions
+    st.write("HT/FT Predictions (Goals by Home - Goals by Away):")
+    for ht_pred in ht_predictions:
+        st.write(f"HT {ht_pred[0]} - FT {ht_pred[1]} with Probability: {ht_pred[2]:.5f}")
+
+    # Optional: Plotting (can be expanded for better visualizations)
+    fig, ax = plt.subplots()
+    ax.bar([f"HT {x[0]} - FT {x[1]}" for x in ht_predictions], [x[2] for x in ht_predictions])
+    ax.set_title("HT/FT Predictions")
+    ax.set_xticklabels([f"HT {x[0]} - FT {x[1]}" for x in ht_predictions], rotation=45)
+    st.pyplot(fig)
+
