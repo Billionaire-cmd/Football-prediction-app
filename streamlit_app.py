@@ -9,34 +9,34 @@ st.title("🤖🤖🤖Rabiotic HT/FT Correct score Predictor")
 team_a = st.text_input("Enter Team A Name", value="Team A")
 team_b = st.text_input("Enter Team B Name", value="Team B")
 
-team_a_avg_goals = st.number_input(f"Enter {team_a} Average Goals", min_value=0.0, step=0.1, value=1.3)
+team_a_avg_goals = st.number_input(f"Enter {team_a} Average Goals", min_value=0.0, step=0.1, value=1.9)
 team_b_avg_goals = st.number_input(f"Enter {team_b} Average Goals", min_value=0.0, step=0.1, value=1.7)
 
 # Inputs for Win Percentages (as decimals)
-team_a_win_percentage = st.number_input(f"Enter {team_a} Win Percentage (as decimal, e.g., 0.80 for 80%)", min_value=0.0, max_value=1.0, step=0.01, value=0.80)
-team_b_win_percentage = st.number_input(f"Enter {team_b} Win Percentage (as decimal, e.g., 0.80 for 80%)", min_value=0.0, max_value=1.0, step=0.01, value=0.80)
+team_a_win_percentage = st.number_input(f"Enter {team_a} Win Percentage (as decimal, e.g., 0.80 for 80%)", min_value=0.0, max_value=1.0, step=0.01, value=0.87)
+team_b_win_percentage = st.number_input(f"Enter {team_b} Win Percentage (as decimal, e.g., 0.80 for 80%)", min_value=0.0, max_value=1.0, step=0.01, value=0.40)
 
 # Inputs for Match Odds
-home_odds = st.number_input("Enter Home Win Odds", min_value=1.0, step=0.01, value=2.5)
-draw_odds = st.number_input("Enter Draw Odds", min_value=1.0, step=0.01, value=3.2)
-away_odds = st.number_input("Enter Away Win Odds", min_value=1.0, step=0.01, value=3.0)
+home_odds = st.number_input("Enter Home Win Odds", min_value=1.0, step=0.01, value=1.35)
+draw_odds = st.number_input("Enter Draw Odds", min_value=1.0, step=0.01, value=5.76)
+away_odds = st.number_input("Enter Away Win Odds", min_value=1.0, step=0.01, value=9.25)
 
 # Inputs for HT/FT Odds
-ht_home_home_odds = st.number_input("Enter HT Home/Home Odds", min_value=0.0, step=0.01, value=4.5)
-ht_home_draw_odds = st.number_input("Enter HT Home/Draw Odds", min_value=0.0, step=0.01, value=4.5)
-ht_home_away_odds = st.number_input("Enter HT Home/Away Odds", min_value=0.0, step=0.01, value=9.0)
-ht_draw_draw_odds = st.number_input("Enter HT Draw/Draw Odds", min_value=1.0, step=0.01, value=4.5)
-ht_draw_home_odds = st.number_input("Enter HT Draw/Home Odds", min_value=0.0, step=0.01, value=6.0)
-ht_draw_away_odds = st.number_input("Enter HT Draw/Away Odds", min_value=0.0, step=0.01, value=8.0)
-ht_away_home_odds = st.number_input("Enter HT Away/Home Odds", min_value=0.0, step=0.01, value=10.0)
-ht_away_draw_odds = st.number_input("Enter HT Away/Draw Odds", min_value=0.0, step=0.01, value=7.0)
-ht_away_away_odds = st.number_input("Enter HT Away/Away Odds", min_value=0.0, step=0.01, value=4.5)
+ht_home_home_odds = st.number_input("Enter HT Home/Home Odds", min_value=0.0, step=0.01, value=1.82)
+ht_home_draw_odds = st.number_input("Enter HT Home/Draw Odds", min_value=0.0, step=0.01, value=22.97)
+ht_home_away_odds = st.number_input("Enter HT Home/Away Odds", min_value=0.0, step=0.01, value=50.0)
+ht_draw_draw_odds = st.number_input("Enter HT Draw/Draw Odds", min_value=1.0, step=0.01, value=8.15)
+ht_draw_home_odds = st.number_input("Enter HT Draw/Home Odds", min_value=0.0, step=0.01, value=3.98)
+ht_draw_away_odds = st.number_input("Enter HT Draw/Away Odds", min_value=0.0, step=0.01, value=18.98)
+ht_away_home_odds = st.number_input("Enter HT Away/Home Odds", min_value=0.0, step=0.01, value=24.78)
+ht_away_draw_odds = st.number_input("Enter HT Away/Draw Odds", min_value=0.0, step=0.01, value=23.54)
+ht_away_away_odds = st.number_input("Enter HT Away/Away Odds", min_value=0.0, step=0.01, value=14.78)
 
 # Inputs for Over/Under Odds
-over_1_5_odds = st.number_input("Enter Over 1.5 Odds", min_value=0.0, step=0.01, value=1.5)
-under_1_5_odds = st.number_input("Enter Under 1.5 Odds", min_value=0.0, step=0.01, value=2.5)
-over_2_5_odds = st.number_input("Enter Over 2.5 Odds", min_value=0.0, step=0.01, value=2.0)
-under_2_5_odds = st.number_input("Enter Under 2.5 Odds", min_value=0.0, step=0.01, value=1.8)
+over_1_5_odds = st.number_input("Enter Over 1.5 Odds", min_value=0.0, step=0.01, value=1.19)
+under_1_5_odds = st.number_input("Enter Under 1.5 Odds", min_value=0.0, step=0.01, value=5.0)                              
+over_2_5_odds = st.number_input("Enter Over 2.5 Odds", min_value=0.0, step=0.01, value=1.6)
+under_2_5_odds = st.number_input("Enter Under 2.5 Odds", min_value=0.0, step=0.01, value=2.4)
 
 # Function to convert odds to probability
 def odds_to_probability(odds):
