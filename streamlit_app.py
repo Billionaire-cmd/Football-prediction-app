@@ -12,31 +12,31 @@ team_b = st.text_input("Enter Team B Name", value="Team B")
 team_a_avg_goals = st.number_input(f"Enter {team_a} Average Goals", min_value=0.0, step=0.1, value=2.0)
 team_b_avg_goals = st.number_input(f"Enter {team_b} Average Goals", min_value=0.0, step=0.1, value=1.0)
 
-team_a_win_percentage = 0.7407
-team_b_win_percentage = 0.1081
-draw_percentage = 0.1736
+team_a_win_percentage = st.number_input(f"Enter {team_a} Win Percentage (%)", min_value=0.0, max_value=100.0, step=0.01, value=74.07)
+draw_percentage = st.number_input("Enter Draw Percentage (%)", min_value=0.0, max_value=100.0, step=0.01, value=17.36)
+team_b_win_percentage = st.number_input(f"Enter {team_b} Win Percentage (%)", min_value=0.0, max_value=100.0, step=0.01, value=10.81)
 
 # Inputs for Match Odds
-home_odds = 1 / team_a_win_percentage
-draw_odds = 1 / draw_percentage
-away_odds = 1 / team_b_win_percentage
+home_odds = st.number_input(f"Enter {team_a} (Home) Odds", min_value=1.0, step=0.01, value=1 / (team_a_win_percentage / 100))
+draw_odds = st.number_input("Enter Draw Odds", min_value=1.0, step=0.01, value=1 / (draw_percentage / 100))
+away_odds = st.number_input(f"Enter {team_b} (Away) Odds", min_value=1.0, step=0.01, value=1 / (team_b_win_percentage / 100))
 
 # Inputs for HT/FT Odds
-ht_home_home_odds = 1.82
-ht_home_draw_odds = 22.97
-ht_home_away_odds = 50.0
-ht_draw_draw_odds = 8.15
-ht_draw_home_odds = 3.98
-ht_draw_away_odds = 18.98
-ht_away_home_odds = 24.78
-ht_away_draw_odds = 23.54
-ht_away_away_odds = 14.78
+ht_home_home_odds = st.number_input("Enter HT Home/Home Odds", min_value=1.0, step=0.01, value=1.82)
+ht_home_draw_odds = st.number_input("Enter HT Home/Draw Odds", min_value=1.0, step=0.01, value=22.97)
+ht_home_away_odds = st.number_input("Enter HT Home/Away Odds", min_value=1.0, step=0.01, value=50.0)
+ht_draw_draw_odds = st.number_input("Enter HT Draw/Draw Odds", min_value=1.0, step=0.01, value=8.15)
+ht_draw_home_odds = st.number_input("Enter HT Draw/Home Odds", min_value=1.0, step=0.01, value=3.98)
+ht_draw_away_odds = st.number_input("Enter HT Draw/Away Odds", min_value=1.0, step=0.01, value=18.98)
+ht_away_home_odds = st.number_input("Enter HT Away/Home Odds", min_value=1.0, step=0.01, value=24.78)
+ht_away_draw_odds = st.number_input("Enter HT Away/Draw Odds", min_value=1.0, step=0.01, value=23.54)
+ht_away_away_odds = st.number_input("Enter HT Away/Away Odds", min_value=1.0, step=0.01, value=14.78)
 
 # Inputs for Over/Under Odds
-over_1_5_odds = 1.19
-under_1_5_odds = 5.0
-over_2_5_odds = 1.6
-under_2_5_odds = 2.4
+over_1_5_odds = st.number_input("Enter Over 1.5 Odds", min_value=1.0, step=0.01, value=1.19)
+under_1_5_odds = st.number_input("Enter Under 1.5 Odds", min_value=1.0, step=0.01, value=5.0)
+over_2_5_odds = st.number_input("Enter Over 2.5 Odds", min_value=1.0, step=0.01, value=1.6)
+under_2_5_odds = st.number_input("Enter Under 2.5 Odds", min_value=1.0, step=0.01, value=2.4)
 
 # Function to convert odds to probability
 def odds_to_probability(odds):
@@ -44,9 +44,9 @@ def odds_to_probability(odds):
 
 # Calculate probabilities for Match Odds
 match_probabilities = {
-    f"{team_a} Win": team_a_win_percentage * 100,
-    "Draw": draw_percentage * 100,
-    f"{team_b} Win": team_b_win_percentage * 100,
+    f"{team_a} Win": team_a_win_percentage,
+    "Draw": draw_percentage,
+    f"{team_b} Win": team_b_win_percentage,
 }
 
 # Calculate probabilities for HT/FT Odds
