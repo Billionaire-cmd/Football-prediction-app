@@ -4,6 +4,7 @@ from scipy.stats import poisson
 
 # Title of the app
 st.title("🤖Rabiotic HT/FT Correct score Predictor")
+
 # Function to calculate probabilities from odds
 def predict_outcome(home_odds, draw_odds, away_odds):
     home_prob = 1 / home_odds
@@ -58,6 +59,7 @@ ht_draw_away_odds = st.number_input("Enter HT Draw/Away Odds", min_value=0.0, st
 ht_away_home_odds = st.number_input("Enter HT Away/Home Odds", min_value=0.0, step=0.01, value=10.0)
 ht_away_draw_odds = st.number_input("Enter HT Away/Draw Odds", min_value=0.0, step=0.01, value=7.0)
 ht_away_away_odds = st.number_input("Enter HT Away/Away Odds", min_value=0.0, step=0.01, value=4.5)
+
 # Function to convert odds to probability
 def odds_to_probability(odds):
     return 1 / odds
@@ -72,9 +74,18 @@ ht_ft_odds = {
     "HT Draw/Away": ht_draw_away_odds,
     "HT Away/Home": ht_away_home_odds,
     "HT Away/Draw": ht_away_draw_odds,
-    "HT Away/Away": ht_Away_Away_odds,
+    "HT Away/Away": ht_away_away_odds,
 }
+
 ht_ft_probabilities = {key: odds_to_probability(odds) * 100 for key, odds in ht_ft_odds.items()}
+
+# Function to calculate Poisson probabilities
+def poisson_predict(goals_home, goals_away, lambda_home, lambda_away):
+    return poisson.pmf(goals_home, lambda_home) * poisson.pmf(goals_away, lambda_away)
+
+# You need to define home_lambda and away_lambda
+home_lambda = st.number_input("Enter Home Team Expected Goals (λ)", min_value=0.0, step=0.01, value=1.5)
+away_lambda = st.number_input("Enter Away Team Expected Goals (λ)", min_value=0.0, step=0.01, value=1.2)
 
 # Generate all possible HT/FT predictions
 ht_ft_predictions = []
@@ -129,14 +140,3 @@ for i, prediction in enumerate(correct_score_predictions[:5]):  # Display top 5 
         f"#{i+1}: Scoreline {prediction['Scoreline']} "
         f"with Probability: {prediction['Probability']:.2f}%"
     )
-
-# Optional: Plotting probabilities for HT/FT
-fig, ax = plt.subplots(figsize=(10, 6))
-top_scores = [f"HT {x['HT']} - FT {x['FT']}" for x in ht_ft_predictions[:5]]
-top_probs = [x["Probability"] for x in ht_ft_predictions[:5]]
-ax.bar(top_scores, top_probs, color="skyblue")
-ax.set_title("Top HT/FT Predictions")
-ax.set_ylabel("Probability (%)")
-ax.set_xlabel("HT/FT Scoreline")
-plt.xticks(rotation=45)
-st.pyplot(fig)
