@@ -126,10 +126,10 @@ for key, value in over_under_probabilities.items():
 
 # Display Top HT/FT Predictions
 st.write("### Top HT/FT Predictions (by Probability):")
-for i, prediction in enumerate(ht_ft_predictions[:10]):
+for i, prediction in enumerate(ht_ft_predictions[:5]):
     st.write(f"#{i+1}: HT {prediction['HT']} - FT {prediction['FT']} with Probability: {prediction['Probability']:.2f}%")
 
 # Display Top Correct Score Predictions
 st.write("### Top Correct Score Predictions (by Probability):")
-for i, prediction in enumerate(correct_score_predictions[:10]):
+for i, prediction in enumerate(correct_score_predictions[:2]):
     st.write(f"#{i+1}: Scoreline {prediction['Scoreline']} with Probability: {prediction['Probability']:.2f}%")
