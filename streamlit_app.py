@@ -2,6 +2,8 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from scipy.stats import poisson
 
+# Title of the app
+st.title("🤖Rabiotic HT/FT Correct score Predictor")
 # Function to calculate probabilities from odds
 def predict_outcome(home_odds, draw_odds, away_odds):
     home_prob = 1 / home_odds
