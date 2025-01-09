@@ -40,7 +40,7 @@ under_2_5_odds = st.number_input("Enter Under 2.5 Odds", min_value=0.0, step=0.0
 
 # Function to convert odds to probability
 def odds_to_probability(odds):
-    return 1.4/ odds
+    return 1/ odds
 
 # Calculate probabilities for Match Odds
 match_odds = {
@@ -90,10 +90,10 @@ away_lambda = team_b_avg_goals
 # Generate HT/FT and Correct Score Predictions
 ht_ft_predictions = []
 correct_score_predictions = []
-for ht_home in range(6):  # Half-time goals for home team
-    for ht_away in range(6):  # Half-time goals for away team
-        for ft_home in range(9):  # Full-time goals for home team
-            for ft_away in range(9):  # Full-time goals for away team
+for ht_home in range(8):  # Half-time goals for home team
+    for ht_away in range(8):  # Half-time goals for away team
+        for ft_home in range(10):  # Full-time goals for home team
+            for ft_away in range(10):  # Full-time goals for away team
                 ht_prob = poisson_predict(ht_home, ht_away, home_lambda / 2, away_lambda / 2)
                 ft_prob = poisson_predict(ft_home, ft_away, home_lambda, away_lambda)
                 combined_prob = ht_prob * ft_prob
