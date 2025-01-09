@@ -71,6 +71,11 @@ over_under_probabilities = {
     "Under 2.5": 100 - 62.50,
 }
 
+# Add a submit button to the sidebar
+with st.sidebar:
+    st.markdown("### Submit Prediction")
+    if st.button("Submit Prediction"):
+        st.success("Prediction submitted! Results will be displayed below.")
 # Poisson distribution calculation function for predicting goal probabilities
 def poisson_predict(goals_home, goals_away, lambda_home, lambda_away):
     return poisson.pmf(goals_home, lambda_home) * poisson.pmf(goals_away, lambda_away)
