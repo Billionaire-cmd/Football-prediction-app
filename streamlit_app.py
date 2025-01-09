@@ -12,6 +12,10 @@ team_b = st.text_input("Enter Team B Name", value="Team B")
 team_a_avg_goals = st.number_input(f"Enter {team_a} Average Goals", min_value=0.0, step=0.1, value=1.3)
 team_b_avg_goals = st.number_input(f"Enter {team_b} Average Goals", min_value=0.0, step=0.1, value=1.7)
 
+# Inputs for Win Percentages (as decimals)
+team_a_win_percentage = st.number_input(f"Enter {team_a} Win Percentage (as decimal, e.g., 0.80 for 80%)", min_value=0.0, max_value=1.0, step=0.01, value=0.80)
+team_b_win_percentage = st.number_input(f"Enter {team_b} Win Percentage (as decimal, e.g., 0.80 for 80%)", min_value=0.0, max_value=1.0, step=0.01, value=0.80)
+
 # Inputs for Match Odds
 home_odds = st.number_input("Enter Home Win Odds", min_value=1.0, step=0.01, value=2.5)
 draw_odds = st.number_input("Enter Draw Odds", min_value=1.0, step=0.01, value=3.2)
@@ -118,11 +122,21 @@ for key, value in over_under_probabilities.items():
     st.write(f"{key}: {value:.2f}%")
 
 # Display Top HT/FT Predictions
-st.write("### Top HT/FT Predictions:")
+st.write("### Top HT/FT Predictions (by Probability):")
 for i, prediction in enumerate(ht_ft_predictions[:5]):
     st.write(f"#{i+1}: HT {prediction['HT']} - FT {prediction['FT']} with Probability: {prediction['Probability']:.2f}%")
 
 # Display Top Correct Score Predictions
-st.write("### Top 5 Correct Score Predictions:")
+st.write("### Top Correct Score Predictions (by Probability):")
 for i, prediction in enumerate(correct_score_predictions[:5]):
     st.write(f"#{i+1}: Scoreline {prediction['Scoreline']} with Probability: {prediction['Probability']:.2f}%")
+
+# Recommendation: Provide a summary of the most probable predictions
+st.write("### Recommendations:")
+st.write(f"#### Top 5 Correct Score Predictions:")
+for i, prediction in enumerate(correct_score_predictions[:5]):
+    st.write(f"{i+1}. Scoreline: {prediction['Scoreline']} with Probability: {prediction['Probability']:.2f}%")
+
+st.write(f"#### Top 5 HT/FT Predictions:")
+for i, prediction in enumerate(ht_ft_predictions[:5]):
+    st.write(f"{i+1}. HT {prediction['HT']} - FT {prediction['FT']} with Probability: {prediction['Probability']:.2f}%")
