@@ -141,5 +141,5 @@ for i, prediction in enumerate(correct_score_predictions[:2]):
 
 # Display Top Correct Score Predictions
 st.write("### Top HT/FT Predictions (by Probability):")
-for i, prediction in enumerate(correct_score_predictions[:2]):
+for i, prediction in enumerate(htft_predictions[:2]):
     st.write(f"#{i+1}: Scoreline {prediction['Scoreline']} with Probability: {prediction['Probability']:.2f}%")
