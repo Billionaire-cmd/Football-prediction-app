@@ -81,9 +81,9 @@ if st.button("Predict Match Outcome"):
 
     # Calculate HT/FT probabilities
     ht_ft_predictions = []
-    for ht_home_goals in range(3):  # HT home goals (0-2)
+    for ht_home_goals in range(2):  # HT home goals (0-2)
         for ht_away_goals in range(3):  # HT away goals (0-2)
-            for ft_home_goals in range(ht_home_goals, ht_home_goals + 3):  # FT home goals
+            for ft_home_goals in range(ht_home_goals, ht_home_goals + 2):  # FT home goals
                 for ft_away_goals in range(ht_away_goals, ht_away_goals + 3):  # FT away goals
                     ht_prob = poisson_predict(ht_home_goals, ht_away_goals, home_lambda, away_lambda)
                     ft_prob = poisson_predict(ft_home_goals, ft_away_goals, home_lambda, away_lambda)
