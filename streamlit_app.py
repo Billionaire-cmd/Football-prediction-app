@@ -5,66 +5,48 @@ from scipy.stats import poisson
 # Title of the app
 st.title("🤖Rabiotic HT/FT Correct score Predictor")
 
-# Function to calculate probabilities from odds
-def predict_outcome(home_odds, draw_odds, away_odds):
-    home_prob = 1 / home_odds
-    draw_prob = 1 / draw_odds
-    away_prob = 1 / away_odds
-    total = home_prob + draw_prob + away_prob
-    return {
-        "Home Win Probability": (home_prob / total) * 100,
-        "Draw Probability": (draw_prob / total) * 100,
-        "Away Win Probability": (away_prob / total) * 100,
-    }
+# Inputs for Team Statistics and Match Odds
+team_a = st.text_input("Enter Team A Name", value="Team A")
+team_b = st.text_input("Enter Team B Name", value="Team B")
 
-# Function to calculate double chance probabilities
-def predict_double_chance(home_draw_odds, home_away_odds, draw_away_odds):
-    home_draw_prob = 1 / home_draw_odds
-    home_away_prob = 1 / home_away_odds
-    draw_away_prob = 1 / draw_away_odds
-    total = home_draw_prob + home_away_prob + draw_away_prob
-    return {
-        "Home/Draw Probability": (home_draw_prob / total) * 100,
-        "Home/Away Probability": (home_away_prob / total) * 100,
-        "Draw/Away Probability": (draw_away_prob / total) * 100,
-    }
+team_a_avg_goals = st.number_input(f"Enter {team_a} Average Goals", min_value=0.0, step=0.1, value=1.3)
+team_b_avg_goals = st.number_input(f"Enter {team_b} Average Goals", min_value=0.0, step=0.1, value=1.7)
 
-# Inputs for double chance odds
-home_draw_odds = st.number_input("Enter Home/Draw Odds", min_value=0.0, step=0.01, value=1.5)
-home_away_odds = st.number_input("Enter Home/Away Odds", min_value=0.0, step=0.01, value=1.7)
-draw_away_odds = st.number_input("Enter Draw/Away Odds", min_value=0.0, step=0.01, value=1.9)
+# Inputs for Match Odds
+home_odds = st.number_input("Enter Home Win Odds", min_value=1.0, step=0.01, value=2.5)
+draw_odds = st.number_input("Enter Draw Odds", min_value=1.0, step=0.01, value=3.2)
+away_odds = st.number_input("Enter Away Win Odds", min_value=1.0, step=0.01, value=3.0)
 
-# Function to calculate over/under probabilities
-def predict_over_under(over_1_5_odds, under_1_5_odds, over_2_5_odds, under_2_5_odds):
-    over_1_5_prob = 1 / over_1_5_odds
-    under_1_5_prob = 1 / under_1_5_odds
-    over_2_5_prob = 1 / over_2_5_odds
-    under_2_5_prob = 1 / under_2_5_odds
-    total_1_5 = over_1_5_prob + under_1_5_prob
-    total_2_5 = over_2_5_prob + under_2_5_prob
-    return {
-        "Over 1.5 Probability": (over_1_5_prob / total_1_5) * 100,
-        "Under 1.5 Probability": (under_1_5_prob / total_1_5) * 100,
-        "Over 2.5 Probability": (over_2_5_prob / total_2_5) * 100,
-        "Under 2.5 Probability": (under_2_5_prob / total_2_5) * 100,
-    }
-
-# Inputs for HT/FT odds
+# Inputs for HT/FT Odds
 ht_home_home_odds = st.number_input("Enter HT Home/Home Odds", min_value=0.0, step=0.01, value=4.5)
 ht_home_draw_odds = st.number_input("Enter HT Home/Draw Odds", min_value=0.0, step=0.01, value=4.5)
 ht_home_away_odds = st.number_input("Enter HT Home/Away Odds", min_value=0.0, step=0.01, value=9.0)
-ht_draw_draw_odds = st.number_input("Enter HT Home/Draw Odds", min_value=1.0, step=0.01, value=4.5)
+ht_draw_draw_odds = st.number_input("Enter HT Draw/Draw Odds", min_value=1.0, step=0.01, value=4.5)
 ht_draw_home_odds = st.number_input("Enter HT Draw/Home Odds", min_value=0.0, step=0.01, value=6.0)
 ht_draw_away_odds = st.number_input("Enter HT Draw/Away Odds", min_value=0.0, step=0.01, value=8.0)
 ht_away_home_odds = st.number_input("Enter HT Away/Home Odds", min_value=0.0, step=0.01, value=10.0)
 ht_away_draw_odds = st.number_input("Enter HT Away/Draw Odds", min_value=0.0, step=0.01, value=7.0)
 ht_away_away_odds = st.number_input("Enter HT Away/Away Odds", min_value=0.0, step=0.01, value=4.5)
 
+# Inputs for Over/Under Odds
+over_1_5_odds = st.number_input("Enter Over 1.5 Odds", min_value=0.0, step=0.01, value=1.5)
+under_1_5_odds = st.number_input("Enter Under 1.5 Odds", min_value=0.0, step=0.01, value=2.5)
+over_2_5_odds = st.number_input("Enter Over 2.5 Odds", min_value=0.0, step=0.01, value=2.0)
+under_2_5_odds = st.number_input("Enter Under 2.5 Odds", min_value=0.0, step=0.01, value=1.8)
+
 # Function to convert odds to probability
 def odds_to_probability(odds):
     return 1 / odds
 
-# Calculate probabilities based on HT/FT odds
+# Calculate probabilities for Match Odds
+match_odds = {
+    f"{team_a} Win": home_odds,
+    "Draw": draw_odds,
+    f"{team_b} Win": away_odds,
+}
+match_probabilities = {key: odds_to_probability(odds) * 100 for key, odds in match_odds.items()}
+
+# Calculate probabilities for HT/FT Odds
 ht_ft_odds = {
     "HT Home/Home": ht_home_home_odds,
     "HT Home/Draw": ht_home_draw_odds,
@@ -76,18 +58,26 @@ ht_ft_odds = {
     "HT Away/Draw": ht_away_draw_odds,
     "HT Away/Away": ht_away_away_odds,
 }
-
 ht_ft_probabilities = {key: odds_to_probability(odds) * 100 for key, odds in ht_ft_odds.items()}
+
+# Calculate probabilities for Over/Under Odds
+over_under_odds = {
+    "Over 1.5": over_1_5_odds,
+    "Under 1.5": under_1_5_odds,
+    "Over 2.5": over_2_5_odds,
+    "Under 2.5": under_2_5_odds,
+}
+over_under_probabilities = {key: odds_to_probability(odds) * 100 for key, odds in over_under_odds.items()}
 
 # Poisson distribution calculation function for predicting goal probabilities
 def poisson_predict(goals_home, goals_away, lambda_home, lambda_away):
     return poisson.pmf(goals_home, lambda_home) * poisson.pmf(goals_away, lambda_away)
 
-# Set home and away goal average for Poisson distribution
-home_lambda = st.number_input("Enter Home Team Average Goals (lambda)", min_value=0.0, step=0.01, value=1.5)
-away_lambda = st.number_input("Enter Away Team Average Goals (lambda)", min_value=0.0, step=0.01, value=1.2)
+# Use Team A and B averages for Poisson calculations
+home_lambda = team_a_avg_goals
+away_lambda = team_b_avg_goals
 
-# Generate all possible HT/FT predictions
+# Generate HT/FT and Correct Score Predictions
 ht_ft_predictions = []
 correct_score_predictions = []
 for ht_home in range(3):  # Half-time goals for home team
@@ -102,50 +92,37 @@ for ht_home in range(3):  # Half-time goals for home team
                     "FT": f"{ft_home}:{ft_away}",
                     "Probability": combined_prob * 100,
                 })
-                if ht_home == 0 and ht_away == 0:  # Filter full-time scores only
+                if ht_home == 0 and ht_away == 0:
                     correct_score_predictions.append({
                         "Scoreline": f"{ft_home}:{ft_away}",
                         "Probability": ft_prob * 100,
                     })
 
-# Sort HT/FT predictions by probability
+# Sort predictions by probability
 ht_ft_predictions = sorted(ht_ft_predictions, key=lambda x: x["Probability"], reverse=True)
 correct_score_predictions = sorted(correct_score_predictions, key=lambda x: x["Probability"], reverse=True)
 
-# Display top HT/FT predictions
-st.write("### Top HT/FT Predictions:")
-for i, prediction in enumerate(ht_ft_predictions[:5]):  # Display top 5 predictions
-    st.write(
-        f"#{i+1}: HT {prediction['HT']} - FT {prediction['FT']} "
-        f"with Probability: {prediction['Probability']:.2f}%"
-    )
+# Display Match Odds Probabilities
+st.write(f"### Match Odds Probabilities for {team_a} vs {team_b}:")
+for key, value in match_probabilities.items():
+    st.write(f"{key}: {value:.2f}%")
 
-# Display HT/FT odds-adjusted probabilities
-st.write("### HT/FT Odds-Adjusted Probabilities:")
+# Display HT/FT Probabilities
+st.write("### HT/FT Probabilities:")
 for key, value in ht_ft_probabilities.items():
     st.write(f"{key}: {value:.2f}%")
 
-# Recommendation based on highest HT/FT probability
-top_recommendation = ht_ft_predictions[0]
-st.write("### HT/FT Recommendation:")
-st.write(
-    f"The most likely HT/FT result is **HT {top_recommendation['HT']} - FT {top_recommendation['FT']}** "
-    f"with a probability of **{top_recommendation['Probability']:.2f}%**"
-)
+# Display Over/Under Probabilities
+st.write("### Over/Under Probabilities:")
+for key, value in over_under_probabilities.items():
+    st.write(f"{key}: {value:.2f}%")
 
-# Display top 5 correct score predictions
+# Display Top HT/FT Predictions
+st.write("### Top HT/FT Predictions:")
+for i, prediction in enumerate(ht_ft_predictions[:5]):
+    st.write(f"#{i+1}: HT {prediction['HT']} - FT {prediction['FT']} with Probability: {prediction['Probability']:.2f}%")
+
+# Display Top Correct Score Predictions
 st.write("### Top 5 Correct Score Predictions:")
-for i, prediction in enumerate(correct_score_predictions[:5]):  # Display top 5 correct scores
-    st.write(
-        f"#{i+1}: Scoreline {prediction['Scoreline']} "
-        f"with Probability: {prediction['Probability']:.2f}%"
-    )
-
-# Optional: Plotting probabilities for HT/FT
-fig, ax = plt.subplots(figsize=(10, 6))
-top_scores = [f"HT {x['HT']} - FT {x['FT']}" for x in ht_ft_predictions[:5]]
-top_probs = [x["Probability"] for x in ht_ft_predictions[:5]]
-ax.barh(top_scores, top_probs, color="skyblue")
-ax.set_xlabel("Probability (%)")
-ax.set_title("Top 5 HT/FT Predictions with Probabilities")
-st.pyplot(fig)
+for i, prediction in enumerate(correct_score_predictions[:5]):
+    st.write(f"#{i+1}: Scoreline {prediction['Scoreline']} with Probability: {prediction['Probability']:.2f}%")
