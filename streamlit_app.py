@@ -50,7 +50,7 @@ def predict_over_under(over_1_5_odds, under_1_5_odds, over_2_5_odds, under_2_5_o
     }
 
 # Streamlit app setup
-st.title("Football Match Prediction App")
+st.title("🤖Rabiotic HT/FT Correct score Predictor")
 
 # Inputs for Team A and Team B
 team_a = st.text_input("Enter Team A Name", "Team A")
